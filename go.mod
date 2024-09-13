@@ -102,7 +102,7 @@ require (
 	golang.org/x/sys v0.24.0
 	golang.org/x/time v0.6.0
 	google.golang.org/api v0.193.0
-	google.golang.org/grpc v1.65.0
+	google.golang.org/grpc v1.66.0
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6
 	gopkg.in/yaml.v2 v2.4.0
 	gopkg.in/yaml.v3 v3.0.1
