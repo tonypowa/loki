@@ -237,8 +237,6 @@ func QueryResponseUnwrap(res *QueryResponse) (queryrangebase.Response, error) {
 		return concrete.DetectedLabels, nil
 	case *QueryResponse_DetectedFields:
 		return concrete.DetectedFields, nil
-	case *QueryResponse_SamplesResponse:
-		return concrete.SamplesResponse, nil
 	default:
 		return nil, fmt.Errorf("unsupported QueryResponse response type, got (%T)", res.Response)
 	}
@@ -280,8 +278,6 @@ func QueryResponseWrap(res queryrangebase.Response) (*QueryResponse, error) {
 		p.Response = &QueryResponse_DetectedLabels{response}
 	case *DetectedFieldsResponse:
 		p.Response = &QueryResponse_DetectedFields{response}
-	case *QuerySamplesResponse:
-		p.Response = &QueryResponse_SamplesResponse{response}
 	default:
 		return nil, fmt.Errorf("invalid response format, got (%T)", res)
 	}
@@ -340,7 +336,7 @@ func (Codec) QueryRequestUnwrap(ctx context.Context, req *QueryRequest) (queryra
 		if concrete.Instant.Plan == nil {
 			parsed, err := syntax.ParseExpr(concrete.Instant.GetQuery())
 			if err != nil {
-				return nil, ctx, httpgrpc.Errorf(http.StatusBadRequest, err.Error())
+				return nil, ctx, httpgrpc.Errorf(http.StatusBadRequest, "%s", err.Error())
 			}
 			concrete.Instant.Plan = &plan.QueryPlan{
 				AST: parsed,
@@ -358,7 +354,7 @@ func (Codec) QueryRequestUnwrap(ctx context.Context, req *QueryRequest) (queryra
 		if concrete.Streams.Plan == nil {
 			parsed, err := syntax.ParseExpr(concrete.Streams.GetQuery())
 			if err != nil {
-				return nil, ctx, httpgrpc.Errorf(http.StatusBadRequest, err.Error())
+				return nil, ctx, httpgrpc.Errorf(http.StatusBadRequest, "%s", err.Error())
 			}
 			concrete.Streams.Plan = &plan.QueryPlan{
 				AST: parsed,
@@ -380,8 +376,6 @@ func (Codec) QueryRequestUnwrap(ctx context.Context, req *QueryRequest) (queryra
 		return &DetectedFieldsRequest{
 			DetectedFieldsRequest: *concrete.DetectedFields,
 		}, ctx, nil
-	case *QueryRequest_SamplesRequest:
-		return concrete.SamplesRequest, ctx, nil
 	default:
 		return nil, ctx, fmt.Errorf("unsupported request type while unwrapping, got (%T)", req.Request)
 	}
@@ -413,8 +407,6 @@ func (Codec) QueryRequestWrap(ctx context.Context, r queryrangebase.Request) (*Q
 		result.Request = &QueryRequest_DetectedLabels{DetectedLabels: &req.DetectedLabelsRequest}
 	case *DetectedFieldsRequest:
 		result.Request = &QueryRequest_DetectedFields{DetectedFields: &req.DetectedFieldsRequest}
-	case *logproto.QuerySamplesRequest:
-		result.Request = &QueryRequest_SamplesRequest{SamplesRequest: req}
 	default:
 		return nil, fmt.Errorf("unsupported request type while wrapping, got (%T)", r)
 	}
