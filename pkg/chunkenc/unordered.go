@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/binary"
 	"fmt"
+
 	"io"
 	"math"
 	"time"
@@ -251,15 +252,13 @@ func (hb *unorderedHeadBlock) Iterator(ctx context.Context, direction logproto.D
 	// cutting of blocks.
 	streams := map[string]*logproto.Stream{}
 	baseHash := pipeline.BaseLabels().Hash()
-	var structuredMetadata labels.Labels
 	_ = hb.forEntries(
 		ctx,
 		direction,
 		mint,
 		maxt,
 		func(statsCtx *stats.Context, ts int64, line string, structuredMetadataSymbols symbols) error {
-			structuredMetadata = hb.symbolizer.Lookup(structuredMetadataSymbols, structuredMetadata)
-			newLine, parsedLbs, matches := pipeline.ProcessString(ts, line, structuredMetadata...)
+			newLine, parsedLbs, matches := pipeline.ProcessString(ts, line, hb.symbolizer.Lookup(structuredMetadataSymbols)...)
 			if !matches {
 				return nil
 			}
@@ -295,13 +294,7 @@ func (hb *unorderedHeadBlock) Iterator(ctx context.Context, direction logproto.D
 	for _, stream := range streams {
 		streamsResult = append(streamsResult, *stream)
 	}
-
-	return iter.EntryIteratorWithClose(iter.NewStreamsIterator(streamsResult, direction), func() error {
-		if structuredMetadata != nil {
-			structuredMetadataPool.Put(structuredMetadata) // nolint:staticcheck
-		}
-		return nil
-	})
+	return iter.NewStreamsIterator(streamsResult, direction)
 }
 
 // nolint:unused
@@ -313,15 +306,13 @@ func (hb *unorderedHeadBlock) SampleIterator(
 ) iter.SampleIterator {
 	series := map[string]*logproto.Series{}
 	baseHash := extractor.BaseLabels().Hash()
-	var structuredMetadata labels.Labels
 	_ = hb.forEntries(
 		ctx,
 		logproto.FORWARD,
 		mint,
 		maxt,
 		func(statsCtx *stats.Context, ts int64, line string, structuredMetadataSymbols symbols) error {
-			structuredMetadata = hb.symbolizer.Lookup(structuredMetadataSymbols, structuredMetadata)
-			value, parsedLabels, ok := extractor.ProcessString(ts, line, structuredMetadata...)
+			value, parsedLabels, ok := extractor.ProcessString(ts, line, hb.symbolizer.Lookup(structuredMetadataSymbols)...)
 			if !ok {
 				return nil
 			}
@@ -363,9 +354,6 @@ func (hb *unorderedHeadBlock) SampleIterator(
 	return iter.SampleIteratorWithClose(iter.NewMultiSeriesIterator(seriesRes), func() error {
 		for _, s := range series {
 			SamplesPool.Put(s.Samples)
-		}
-		if structuredMetadata != nil {
-			structuredMetadataPool.Put(structuredMetadata) // nolint:staticcheck
 		}
 		return nil
 	})
@@ -457,7 +445,7 @@ func (hb *unorderedHeadBlock) Convert(version HeadBlockFmt, symbolizer *symboliz
 		0,
 		math.MaxInt64,
 		func(_ *stats.Context, ts int64, line string, structuredMetadataSymbols symbols) error {
-			_, err := out.Append(ts, line, hb.symbolizer.Lookup(structuredMetadataSymbols, nil))
+			_, err := out.Append(ts, line, hb.symbolizer.Lookup(structuredMetadataSymbols))
 			return err
 		},
 	)
@@ -597,7 +585,8 @@ func (hb *unorderedHeadBlock) LoadBytes(b []byte) error {
 				}
 			}
 		}
-		if _, err := hb.Append(ts, line, hb.symbolizer.Lookup(structuredMetadataSymbols, nil)); err != nil {
+
+		if _, err := hb.Append(ts, line, hb.symbolizer.Lookup(structuredMetadataSymbols)); err != nil {
 			return err
 		}
 	}

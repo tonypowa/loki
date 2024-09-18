@@ -15,12 +15,6 @@ import (
 	"github.com/grafana/loki/v3/pkg/util"
 )
 
-var structuredMetadataPool = sync.Pool{
-	New: func() interface{} {
-		return make(labels.Labels, 0, 8)
-	},
-}
-
 // symbol holds reference to a label name and value pair
 type symbol struct {
 	Name, Value uint32
@@ -96,20 +90,18 @@ func (s *symbolizer) add(lbl string) uint32 {
 }
 
 // Lookup coverts and returns labels pairs for the given symbols
-func (s *symbolizer) Lookup(syms symbols, buf labels.Labels) labels.Labels {
+func (s *symbolizer) Lookup(syms symbols) labels.Labels {
 	if len(syms) == 0 {
 		return nil
 	}
-	if buf == nil {
-		buf = structuredMetadataPool.Get().(labels.Labels)
-	}
-	buf = buf[:0]
+	lbls := make([]labels.Label, len(syms))
 
-	for _, symbol := range syms {
-		buf = append(buf, labels.Label{Name: s.lookup(symbol.Name), Value: s.lookup(symbol.Value)})
+	for i, symbol := range syms {
+		lbls[i].Name = s.lookup(symbol.Name)
+		lbls[i].Value = s.lookup(symbol.Value)
 	}
 
-	return buf
+	return lbls
 }
 
 func (s *symbolizer) lookup(idx uint32) string {
