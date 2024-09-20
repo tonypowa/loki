@@ -247,6 +247,7 @@ func QueryResponseWrap(res queryrangebase.Response) (*QueryResponse, error) {
 	case *LokiPromResponse:
 		p.Response = &QueryResponse_Prom{response}
 	case *LokiResponse:
+		fmt.Printf("ResponseWrap streams: %d\n", len(response.Data.Result))
 		p.Response = &QueryResponse_Streams{response}
 	case *LokiSeriesResponse:
 		p.Response = &QueryResponse_Series{response}

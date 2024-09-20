@@ -374,6 +374,7 @@ func (it *logBatchIterator) Close() error {
 }
 
 func (it *logBatchIterator) At() logproto.Entry {
+	// fmt.Printf(">>> store log iterator %#v", it.curr.At().StructuredMetadata)
 	return it.curr.At()
 }
 

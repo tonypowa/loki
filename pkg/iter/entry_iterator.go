@@ -2,6 +2,7 @@ package iter
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"math"
 	"sync"
@@ -385,6 +386,7 @@ func (i *queryClientIterator) Next() bool {
 }
 
 func (i *queryClientIterator) At() logproto.Entry {
+	// fmt.Printf("ingester client %#v", i.curr.At().StructuredMetadata)
 	return i.curr.At()
 }
 
@@ -698,6 +700,7 @@ func ReadBatch(i EntryIterator, size uint32) (*logproto.QueryResponse, uint32, e
 			}
 			mutatedStreams[labels] = mutatedStream
 		}
+		fmt.Printf("read batch: %#v\n", entry.StructuredMetadata)
 		mutatedStream.Entries = append(mutatedStream.Entries, entry)
 	}
 

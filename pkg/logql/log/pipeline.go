@@ -232,6 +232,7 @@ func (p *streamPipeline) Process(ts int64, line []byte, structuredMetadata ...la
 	}
 
 	p.builder.Add(StructuredMetadataLabel, structuredMetadata...)
+	// fmt.Printf(">>> pipeline: %#v\n", structuredMetadata)
 
 	for _, s := range p.stages {
 		line, ok = s.Process(ts, line, p.builder)

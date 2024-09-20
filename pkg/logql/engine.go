@@ -307,6 +307,7 @@ func (q *query) Eval(ctx context.Context) (promql_parser.Value, error) {
 
 		defer util.LogErrorWithContext(ctx, "closing iterator", itr.Close)
 		streams, err := readStreams(itr, q.params.Limit(), q.params.Direction(), q.params.Interval())
+		fmt.Println(">>>> eval complete on querier", streams)
 		return streams, err
 	default:
 		return nil, fmt.Errorf("unexpected type (%T): cannot evaluate", e)
@@ -572,6 +573,7 @@ func readStreams(i iter.EntryIterator, size uint32, dir logproto.Direction, inte
 				streams[streamLabels] = stream
 			}
 			stream.Entries = append(stream.Entries, entry)
+			fmt.Printf("readStream labels: %v entry: %v line: %s\n", streamLabels, entry.StructuredMetadata, entry.Line)
 			lastEntry = i.At().Timestamp
 			respSize++
 		}

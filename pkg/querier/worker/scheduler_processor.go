@@ -242,12 +242,14 @@ func (sp *schedulerProcessor) runHTTPRequest(ctx context.Context, logger log.Log
 }
 
 func (sp *schedulerProcessor) reply(ctx context.Context, logger log.Logger, frontendAddress string, result *frontendv2pb.QueryResultRequest) {
+	fmt.Printf(">>> Reply: %+v\n", result.Response)
 	runPoolWithBackoff(
 		ctx,
 		logger,
 		sp.frontendPool,
 		frontendAddress,
 		func(c client.PoolClient) error {
+			fmt.Println(">>> Sending result to frontend")
 			// Response is empty and uninteresting.
 			_, err := c.(frontendv2pb.FrontendForQuerierClient).QueryResult(ctx, result)
 			if err != nil {

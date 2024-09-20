@@ -1085,6 +1085,8 @@ func sendBatches(ctx context.Context, i iter.EntryIterator, queryServer QuerierQ
 		stats.Reset()
 		metadata.Reset()
 	}
+
+	fmt.Println(">>> finished send batches")
 	return nil
 }
 

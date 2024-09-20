@@ -1656,6 +1656,7 @@ func (e *entryBufferedIterator) Next() bool {
 		e.cur.Timestamp = time.Unix(0, e.currTs)
 		e.cur.Line = string(newLine)
 		e.cur.StructuredMetadata = logproto.FromLabelsToLabelAdapters(lbs.StructuredMetadata())
+		fmt.Printf("entry iterator: %#v\n", e.cur.StructuredMetadata)
 		e.cur.Parsed = logproto.FromLabelsToLabelAdapters(lbs.Parsed())
 
 		return true

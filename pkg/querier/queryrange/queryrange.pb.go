@@ -3638,6 +3638,7 @@ func (m *LokiResponse) MarshalTo(dAtA []byte) (int, error) {
 }
 
 func (m *LokiResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	fmt.Println(">>> Marhsalling LokiResponse")
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -3945,11 +3946,13 @@ func (m *LokiData) MarshalTo(dAtA []byte) (int, error) {
 }
 
 func (m *LokiData) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	fmt.Println(">>> Marhsalling LokiData")
 	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
 	if len(m.Result) > 0 {
+		fmt.Printf(">>> Streams during marshal: %d\n", len(m.Result))
 		for iNdEx := len(m.Result) - 1; iNdEx >= 0; iNdEx-- {
 			{
 				size := m.Result[iNdEx].Size()
@@ -4557,6 +4560,7 @@ func (m *QueryResponse_Streams) MarshalTo(dAtA []byte) (int, error) {
 }
 
 func (m *QueryResponse_Streams) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	fmt.Println(">>> Marshall QueryResponse_Streams")
 	i := len(dAtA)
 	if m.Streams != nil {
 		{

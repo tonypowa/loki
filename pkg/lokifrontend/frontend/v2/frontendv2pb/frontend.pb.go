@@ -54,6 +54,7 @@ func (m *QueryResultRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, 
 		return xxx_messageInfo_QueryResultRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
+		fmt.Println(">>> Marshalling QueryResultRequest")
 		n, err := m.MarshalToSizedBuffer(b)
 		if err != nil {
 			return nil, err
@@ -515,6 +516,7 @@ func (m *QueryResultRequest_QueryResponse) MarshalTo(dAtA []byte) (int, error) {
 }
 
 func (m *QueryResultRequest_QueryResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	fmt.Println(">>> Marshalling QueryResultRequest_QueryResponse")
 	i := len(dAtA)
 	if m.QueryResponse != nil {
 		{

@@ -423,6 +423,7 @@ func encodeStream(stream logproto.Stream, s *jsoniter.Stream, encodeFlags httpre
 			if len(e.StructuredMetadata) > 0 {
 				s.WriteObjectField("structuredMetadata")
 				s.WriteObjectStart()
+				fmt.Printf("encode streams %v\n", e.StructuredMetadata)
 				encodeLabels(e.StructuredMetadata, s)
 				s.WriteObjectEnd()
 				writeMore = true

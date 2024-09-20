@@ -112,6 +112,7 @@ func (m *LabelAdapter) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	// fmt.Printf("Marhsalling KV: key=%s value=%s\n", m.Name, m.Value)
 	if len(m.Value) > 0 {
 		i -= len(m.Value)
 		copy(dAtA[i:], m.Value)
@@ -123,6 +124,7 @@ func (m *LabelAdapter) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i -= len(m.Name)
 		copy(dAtA[i:], m.Name)
 		i = encodeVarintPush(dAtA, i, uint64(len(m.Name)))
+		// fmt.Printf("Marhsalling: key=%s  len=%d raw=%q\n", m.Name, len(m.Name), string(dAtA[i:]))
 		i--
 		dAtA[i] = 0xa
 	}
@@ -145,6 +147,7 @@ func (m *Stream) MarshalTo(dAtA []byte) (int, error) {
 }
 
 func (m *Stream) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	fmt.Printf(">> Marshalling stream: %#v\n", m)
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -212,6 +215,7 @@ func (m *Entry) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 			dAtA[i] = 0x22
 		}
 	}
+	// fmt.Println(m)
 	if len(m.StructuredMetadata) > 0 {
 		for iNdEx := len(m.StructuredMetadata) - 1; iNdEx >= 0; iNdEx-- {
 			{
@@ -510,6 +514,8 @@ func (m *Entry) Unmarshal(dAtA []byte) error {
 			if err := m.StructuredMetadata[len(m.StructuredMetadata)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
+
+			// fmt.Printf("Unmarshalled: key=%s  len=%d raw=%q\n", m.StructuredMetadata[len(m.StructuredMetadata)-1].Name, postIndex-iNdEx, string(dAtA[iNdEx:postIndex]))
 			iNdEx = postIndex
 		case 4:
 			if wireType != 2 {
