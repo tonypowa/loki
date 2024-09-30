@@ -5,6 +5,7 @@ import (
 	"flag"
 	"io"
 	"sort"
+	"time"
 
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
@@ -47,10 +48,9 @@ type GRPCPool struct {
 // NewBloomGatewayGRPCPool instantiates a new pool of GRPC connections for the Bloom Gateway
 // Internally, it also instantiates a protobuf bloom gateway client and a health client.
 func NewBloomGatewayGRPCPool(address string, opts []grpc.DialOption) (*GRPCPool, error) {
-	// nolint:staticcheck // grpc.Dial() has been deprecated; we'll address it before upgrading to gRPC 2.
-	conn, err := grpc.Dial(address, opts...)
+	conn, err := grpc.NewClient(address, opts...)
 	if err != nil {
-		return nil, errors.Wrap(err, "new grpc pool dial")
+		return nil, errors.Wrap(err, "new grpc client")
 	}
 
 	return &GRPCPool{
@@ -60,8 +60,8 @@ func NewBloomGatewayGRPCPool(address string, opts []grpc.DialOption) (*GRPCPool,
 	}, nil
 }
 
-// IndexGatewayClientConfig configures the Index Gateway client used to
-// communicate with the Index Gateway server.
+// ClientConfig configures the Bloom Gateway client that is used in the bloom
+// querier on the index gateway.
 type ClientConfig struct {
 	// PoolConfig defines the behavior of the gRPC connection pool used to communicate
 	// with the Bloom Gateway.
@@ -248,14 +248,17 @@ func (c *GatewayClient) FilterChunks(ctx context.Context, _ string, interval blo
 
 	results := make([][]*logproto.GroupedChunkRefs, len(servers))
 	count := atomic.NewInt64(0)
-	err := concurrency.ForEachJob(ctx, len(servers), len(servers), func(ctx context.Context, i int) error {
+	err := concurrency.ForEachJob(ctx, len(servers), 0, func(ctx context.Context, i int) error {
 		rs := servers[i]
 
 		sort.Slice(rs.groups, func(i, j int) bool {
 			return rs.groups[i].Fingerprint < rs.groups[j].Fingerprint
 		})
 
-		return c.doForAddrs([]string{rs.addr}, func(client logproto.BloomGatewayClient) error {
+		return c.doForAddr(rs.addr, func(client logproto.BloomGatewayClient) error {
+			ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
+			defer cancel()
+
 			req := &logproto.FilterChunkRefRequest{
 				From:    interval.Start,
 				Through: interval.End,
@@ -394,6 +397,21 @@ func (c *GatewayClient) doForAddrs(addrs []string, fn func(logproto.BloomGateway
 		return nil
 	}
 	return err
+}
+
+// doForAddr sequetially calls the provided callback function fn for the given addr.
+func (c *GatewayClient) doForAddr(addr string, fn func(logproto.BloomGatewayClient) error) error {
+	poolClient, err := c.pool.GetClientFor(addr)
+	if err != nil {
+		level.Error(c.logger).Log("msg", "failed to get client for instance", "addr", addr, "err", err)
+		return err
+	}
+	err = fn(poolClient.(logproto.BloomGatewayClient))
+	if err != nil {
+		level.Error(c.logger).Log("msg", "client do failed for instance", "addr", addr, "err", err)
+		return err
+	}
+	return nil
 }
 
 type addrWithGroups struct {

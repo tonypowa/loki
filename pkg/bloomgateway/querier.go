@@ -226,6 +226,9 @@ func (bq *BloomQuerier) FilterChunkRefs(ctx context.Context, tenant string, from
 // The second argument `grouped` can be used to pass a buffer to avoid allocations.
 // If it's nil, the returned slice will be allocated.
 func groupChunkRefs(chunkRefs []*logproto.ChunkRef, grouped []*logproto.GroupedChunkRefs) []*logproto.GroupedChunkRefs {
+	// clear buffer
+	grouped = grouped[:0]
+
 	seen := make(map[uint64]int, len(grouped))
 	for _, chunkRef := range chunkRefs {
 		if idx, found := seen[chunkRef.Fingerprint]; found {
