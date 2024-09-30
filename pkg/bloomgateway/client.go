@@ -12,6 +12,7 @@ import (
 	"github.com/grafana/dskit/concurrency"
 	"github.com/grafana/dskit/grpcclient"
 	ringclient "github.com/grafana/dskit/ring/client"
+	"github.com/grafana/dskit/user"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	"go.uber.org/atomic"
@@ -212,7 +213,7 @@ func (c *GatewayClient) Close() {
 }
 
 // FilterChunkRefs implements Client
-func (c *GatewayClient) FilterChunks(ctx context.Context, _ string, interval bloomshipper.Interval, blocks []blockWithSeries, plan plan.QueryPlan) ([]*logproto.GroupedChunkRefs, error) {
+func (c *GatewayClient) FilterChunks(ctx context.Context, tenant string, interval bloomshipper.Interval, blocks []blockWithSeries, plan plan.QueryPlan) ([]*logproto.GroupedChunkRefs, error) {
 	// no block and therefore no series with chunks
 	if len(blocks) == 0 {
 		return nil, nil
@@ -256,6 +257,7 @@ func (c *GatewayClient) FilterChunks(ctx context.Context, _ string, interval blo
 		})
 
 		return c.doForAddr(rs.addr, func(client logproto.BloomGatewayClient) error {
+			ctx := user.InjectOrgID(context.Background(), tenant)
 			ctx, cancel := context.WithTimeout(ctx, time.Second*30)
 			defer cancel()
 
