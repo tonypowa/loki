@@ -256,7 +256,7 @@ func (c *GatewayClient) FilterChunks(ctx context.Context, _ string, interval blo
 		})
 
 		return c.doForAddr(rs.addr, func(client logproto.BloomGatewayClient) error {
-			ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
+			ctx, cancel := context.WithTimeout(ctx, time.Second*30)
 			defer cancel()
 
 			req := &logproto.FilterChunkRefRequest{
