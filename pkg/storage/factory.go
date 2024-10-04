@@ -15,6 +15,7 @@ import (
 	"github.com/grafana/dskit/flagext"
 
 	"github.com/grafana/loki/v3/pkg/indexgateway"
+	"github.com/grafana/loki/v3/pkg/storage/bucket"
 	"github.com/grafana/loki/v3/pkg/storage/chunk/cache"
 	"github.com/grafana/loki/v3/pkg/storage/chunk/client"
 	"github.com/grafana/loki/v3/pkg/storage/chunk/client/alibaba"
@@ -269,25 +270,36 @@ func (ns *NamedStores) Exists(name string) bool {
 	return ok
 }
 
+type LegacyStorageConfig struct {
+	GCSConfig gcp.GCSConfig `yaml:"gcs" doc:"description=Configures storing chunks in GCS. Required fields only required when gcs is defined in config."`
+}
+
+type ThanosStorageConfig bucket.Config
+
+type StorageConfig struct {
+	UseThanosStorageConfig bool `yaml:"use_thanos_storage_config,omitempty"`
+
+	LegacyStorageConfig
+	ThanosStorageConfig
+}
+
 // Config chooses which storage client to use.
 type Config struct {
-	AlibabaStorageConfig   alibaba.OssConfig         `yaml:"alibabacloud"`
-	AWSStorageConfig       aws.StorageConfig         `yaml:"aws"`
-	AzureStorageConfig     azure.BlobStorageConfig   `yaml:"azure"`
-	BOSStorageConfig       baidubce.BOSStorageConfig `yaml:"bos"`
-	GCPStorageConfig       gcp.Config                `yaml:"bigtable" doc:"description=Deprecated: Configures storing indexes in Bigtable. Required fields only required when bigtable is defined in config."`
-	GCSConfig              gcp.GCSConfig             `yaml:"gcs" doc:"description=Configures storing chunks in GCS. Required fields only required when gcs is defined in config."`
-	CassandraStorageConfig cassandra.Config          `yaml:"cassandra" doc:"description=Deprecated: Configures storing chunks and/or the index in Cassandra."`
-	BoltDBConfig           local.BoltDBConfig        `yaml:"boltdb" doc:"description=Deprecated: Configures storing index in BoltDB. Required fields only required when boltdb is present in the configuration."`
-	FSConfig               local.FSConfig            `yaml:"filesystem" doc:"description=Configures storing the chunks on the local file system. Required fields only required when filesystem is present in the configuration."`
-	Swift                  openstack.SwiftConfig     `yaml:"swift"`
-	GrpcConfig             grpc.Config               `yaml:"grpc_store" doc:"deprecated"`
-	Hedging                hedging.Config            `yaml:"hedging"`
-	NamedStores            NamedStores               `yaml:"named_stores"`
-	COSConfig              ibmcloud.COSConfig        `yaml:"cos"`
-	IndexCacheValidity     time.Duration             `yaml:"index_cache_validity"`
-	CongestionControl      congestion.Config         `yaml:"congestion_control,omitempty"`
-	ObjectPrefix           string                    `yaml:"object_prefix" doc:"description=Experimental. Sets a constant prefix for all keys inserted into object storage. Example: loki/"`
+	StorageConfig `yaml:",inline"`
+
+	AlibabaStorageConfig alibaba.OssConfig         `yaml:"alibabacloud"`
+	AWSStorageConfig     aws.StorageConfig         `yaml:"aws"`
+	AzureStorageConfig   azure.BlobStorageConfig   `yaml:"azure"`
+	BOSStorageConfig     baidubce.BOSStorageConfig `yaml:"bos"`
+	COSConfig            ibmcloud.COSConfig        `yaml:"cos"`
+	FSConfig             local.FSConfig            `yaml:"filesystem" doc:"description=Configures storing the chunks on the local file system. Required fields only required when filesystem is present in the configuration."`
+	Swift                openstack.SwiftConfig     `yaml:"swift"`
+
+	Hedging            hedging.Config    `yaml:"hedging"`
+	NamedStores        NamedStores       `yaml:"named_stores"`
+	IndexCacheValidity time.Duration     `yaml:"index_cache_validity"`
+	CongestionControl  congestion.Config `yaml:"congestion_control,omitempty"`
+	ObjectPrefix       string            `yaml:"object_prefix" doc:"description=Experimental. Sets a constant prefix for all keys inserted into object storage. Example: loki/"`
 
 	IndexQueriesCacheConfig  cache.Config `yaml:"index_queries_cache_config"`
 	DisableBroadIndexQueries bool         `yaml:"disable_broad_index_queries"`
@@ -302,10 +314,37 @@ type Config struct {
 	// It is required for getting chunk ids of recently flushed chunks from the ingesters.
 	EnableAsyncStore bool          `yaml:"-"`
 	AsyncStoreConfig AsyncStoreCfg `yaml:"-"`
+
+	// deprecated
+	GCPStorageConfig       gcp.Config         `yaml:"bigtable" doc:"description=Deprecated: Configures storing indexes in Bigtable. Required fields only required when bigtable is defined in config."`
+	CassandraStorageConfig cassandra.Config   `yaml:"cassandra" doc:"description=Deprecated: Configures storing chunks and/or the index in Cassandra."`
+	BoltDBConfig           local.BoltDBConfig `yaml:"boltdb" doc:"description=Deprecated: Configures storing index in BoltDB. Required fields only required when boltdb is present in the configuration."`
+	GrpcConfig             grpc.Config        `yaml:"grpc_store" doc:"deprecated"`
+}
+
+func (cfg *StorageConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	t := struct {
+		UseThanosStorageConfig bool `yaml:"use_thanos_storage_config"`
+	}{}
+
+	if err := unmarshal(&t); err != nil {
+		return err
+	}
+
+	if t.UseThanosStorageConfig == true {
+		cfg.UseThanosStorageConfig = true
+		return unmarshal(&cfg.ThanosStorageConfig)
+	}
+
+	return unmarshal(&cfg.LegacyStorageConfig)
 }
 
 // RegisterFlags adds the flags required to configure this flag set.
 func (cfg *Config) RegisterFlags(f *flag.FlagSet) {
+	f.BoolVar(&cfg.UseThanosStorageConfig, "use-thanos-storage-config", false,
+		"",
+	)
+
 	cfg.AWSStorageConfig.RegisterFlags(f)
 	cfg.AzureStorageConfig.RegisterFlags(f)
 	cfg.BOSStorageConfig.RegisterFlags(f)

@@ -12,8 +12,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/grafana/loki/v3/pkg/storage/bucket/gcs"
 	"github.com/grafana/loki/v3/pkg/storage/chunk/client"
 	"github.com/grafana/loki/v3/pkg/storage/chunk/client/cassandra"
+	"github.com/grafana/loki/v3/pkg/storage/chunk/client/gcp"
 	"github.com/grafana/loki/v3/pkg/storage/chunk/client/local"
 	"github.com/grafana/loki/v3/pkg/storage/config"
 	"github.com/grafana/loki/v3/pkg/storage/stores/shipper/indexshipper"
@@ -22,6 +24,8 @@ import (
 	"github.com/grafana/loki/v3/pkg/util/constants"
 	util_log "github.com/grafana/loki/v3/pkg/util/log"
 	"github.com/grafana/loki/v3/pkg/validation"
+
+	"gopkg.in/yaml.v2"
 )
 
 func TestFactoryStop(t *testing.T) {
@@ -279,6 +283,47 @@ func TestNewObjectClient_prefixing(t *testing.T) {
 		assert.True(t, ok)
 		assert.Equal(t, "my/prefix/", prefixed.GetPrefix())
 	})
+}
+
+// test that ThanosStorageConfig is correctly unmarshaled if UseThanosStorageConfig is true
+func TestStorageConfigUnmarshal(t *testing.T) {
+	expected := StorageConfig{
+		UseThanosStorageConfig: true,
+		ThanosStorageConfig: ThanosStorageConfig{
+			GCS: gcs.Config{
+				BucketName: "test-bucket",
+			},
+		},
+	}
+
+	b := []byte(`use_thanos_storage_config: true
+gcs:
+    bucket_name: test-bucket
+`)
+
+	var got = StorageConfig{}
+	err := yaml.Unmarshal(b, &got)
+	require.NoError(t, err)
+
+	require.Equal(t, expected, got)
+
+	expected = StorageConfig{
+		UseThanosStorageConfig: false,
+		LegacyStorageConfig: LegacyStorageConfig{
+			GCSConfig: gcp.GCSConfig{
+				BucketName: "test-bucket",
+			},
+		},
+	}
+
+	b = []byte(`gcs:
+    bucket_name: test-bucket
+`)
+
+	got = StorageConfig{}
+	err = yaml.Unmarshal(b, &got)
+	require.NoError(t, err)
+	require.Equal(t, expected, got)
 }
 
 // DefaultSchemaConfig creates a simple schema config for testing
