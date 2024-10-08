@@ -173,7 +173,7 @@ func (o *client) getChunk(ctx context.Context, decodeContext *chunk.DecodeContex
 		key = o.keyEncoder(o.schema, c)
 	}
 
-	readCloser, size, err := o.store.GetObject(ctx, key)
+	readCloser, _, err := o.store.GetObject(ctx, key)
 	if err != nil {
 		return chunk.Chunk{}, errors.WithStack(errors.Wrapf(err, "failed to load chunk '%s'", key))
 	}
@@ -185,7 +185,7 @@ func (o *client) getChunk(ctx context.Context, decodeContext *chunk.DecodeContex
 
 	// adds bytes.MinRead to avoid allocations when the size is known.
 	// This is because ReadFrom reads bytes.MinRead by bytes.MinRead.
-	buf := bytes.NewBuffer(make([]byte, 0, size+bytes.MinRead))
+	buf := bytes.NewBuffer(make([]byte, 0, 1024*1024))
 	_, err = buf.ReadFrom(readCloser)
 	if err != nil {
 		return chunk.Chunk{}, errors.WithStack(err)

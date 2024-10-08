@@ -1,6 +1,9 @@
 package client
 
 import (
+	"bytes"
+	"io"
+	"math/rand/v2"
 	"testing"
 	"time"
 
@@ -79,5 +82,48 @@ func TestFSEncoder(t *testing.T) {
 			require.Nil(t, err)
 			require.Equal(t, tc.exp, FSEncoder(schema, chk))
 		})
+	}
+}
+
+type nullSource struct {
+	n int
+}
+
+func (n *nullSource) Close() error {
+	return nil
+}
+
+// set the bytes of b to 0 as long as n is greater than 0, return early if we reach the end of b
+func (n *nullSource) Read(b []byte) (int, error) {
+	if n.n == 0 {
+		return 0, io.EOF
+	}
+
+	for i := range b {
+		b[i] = 0
+		n.n--
+		if n.n == 0 {
+			return i + 1, nil
+		}
+	}
+
+	return len(b), nil
+}
+
+func BenchmarkReads_UnknownSize(b *testing.B) {
+	mb := uint64(1024 * 1024) // 1MB
+
+	b.ReportAllocs()
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		sz := rand.Uint64N(9*mb) + uint64(1*mb)
+		s := &nullSource{n: int(sz)}
+
+		buf := bytes.NewBuffer(make([]byte, 0, 1024*100))
+		_, err := buf.ReadFrom(s)
+		if err != nil {
+			panic(err)
+		}
 	}
 }
