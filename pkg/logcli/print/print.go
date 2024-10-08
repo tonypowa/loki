@@ -201,7 +201,12 @@ type kvLogger struct {
 
 func (k kvLogger) Log(keyvals ...interface{}) error {
 	for i := 0; i < len(keyvals); i += 2 {
-		fmt.Fprintln(k.Writer, color.BlueString("%s", keyvals[i]), "\t", fmt.Sprintf("%v", keyvals[i+1]))
+		fmt.Fprintln(
+			k.Writer,
+			color.BlueString("%s", keyvals[i]),
+			"\t",
+			fmt.Sprintf("%v", keyvals[i+1]),
+		)
 	}
 	k.Flush()
 	return nil
