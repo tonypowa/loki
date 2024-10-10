@@ -435,19 +435,26 @@ func (hb *unorderedHeadBlock) Serialise(pool compression.WriterPool) ([]byte, er
 				metadataBuf.Write(encBuf[:n])
 				metadataBuf.Write(symbolsSectionBuf.Bytes())
 
-				level.Debug(util_log.Logger).Log("bytes_written", n)
-
 				// write `len(line) | line` to lineBuf
 				n = binary.PutUvarint(encBuf, uint64(len(line)))
 				lineBuf.Write(encBuf[:n])
 				lineBuf.WriteString(line)
-
-				// inBuf is now tsBuf | metadataBuf | lineBuf
-				inBuf.Write(tsBuf.Bytes())
-				inBuf.Write(metadataBuf.Bytes())
-				inBuf.Write(lineBuf.Bytes())
 				return nil
 			})
+
+		// inBuf is now tsBuf | metadataBuf | lineBuf
+		n := binary.PutUvarint(encBuf, uint64(tsBuf.Len()))
+		inBuf.Write(encBuf[:n])
+
+		n = binary.PutUvarint(encBuf, uint64(metadataBuf.Len()))
+		inBuf.Write(encBuf[:n])
+
+		n = binary.PutUvarint(encBuf, uint64(lineBuf.Len()))
+		inBuf.Write(encBuf[:n])
+
+		inBuf.Write(tsBuf.Bytes())
+		inBuf.Write(metadataBuf.Bytes())
+		inBuf.Write(lineBuf.Bytes())
 
 		if err != nil {
 			return nil, errors.Wrap(err, "iterating through entries")
