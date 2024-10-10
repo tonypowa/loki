@@ -2,7 +2,9 @@ package queryrange
 
 import (
 	"context"
+	"fmt"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/grafana/dskit/concurrency"
@@ -10,6 +12,7 @@ import (
 	"github.com/prometheus/prometheus/model/labels"
 
 	"github.com/grafana/loki/v3/pkg/loghttp"
+	"github.com/grafana/loki/v3/pkg/loghttp/push"
 	"github.com/grafana/loki/v3/pkg/logproto"
 	"github.com/grafana/loki/v3/pkg/logql/syntax"
 	"github.com/grafana/loki/v3/pkg/logqlmodel/stats"
@@ -211,4 +214,80 @@ func toPrometheusData(series map[string][]logproto.LegacySample, aggregateBySeri
 		ResultType: resultType,
 		Result:     result,
 	}
+}
+
+type aggregatedMetricQuery struct {
+	matchers    []*labels.Matcher
+	aggregateBy string
+	start       time.Time
+	end         time.Time
+}
+
+func (a *aggregatedMetricQuery) buildBaseQueryString(
+	idxKey string,
+	serviceMatchType string,
+	serviceName string,
+) string {
+	aggBy := a.aggregateBy
+	if aggBy == "" {
+		if serviceName != "" {
+			aggBy = push.LabelServiceName
+		} else {
+			aggBy = idxKey
+		}
+	}
+
+	if serviceName != "" {
+		return fmt.Sprintf(
+			`sum by (%s) (sum_over_time({%s%s"%s"} | logfmt`,
+			aggBy,
+			push.AggregatedMetricLabel,
+			serviceMatchType,
+			serviceName,
+		)
+	}
+
+	return fmt.Sprintf(
+		`sum by (%s) (sum_over_time({%s=~".+"} | logfmt`,
+		aggBy,
+		push.AggregatedMetricLabel,
+	)
+}
+
+func (a *aggregatedMetricQuery) BuildQuery() string {
+	// by this point query as been validated and we can assume that there is at least one matcher
+	firstMatcher := a.matchers[0]
+
+	// idxKey will be the label to aggregate by, which is the first matcher's name
+	// when service_name is not provided
+	var serviceName, serviceMatchType string
+	idxKey := firstMatcher.Name
+	if idxKey == push.LabelServiceName {
+		idxKey = push.AggregatedMetricLabel
+		serviceName = firstMatcher.Value
+		serviceMatchType = firstMatcher.Type.String()
+	}
+
+	filters := make([]string, 0, len(a.matchers))
+	filters = append(filters, firstMatcher.String())
+
+	for _, matcher := range a.matchers[1:] {
+		// always index by service name if present anywhere in the matchers
+		if matcher.Name == push.LabelServiceName {
+			idxKey = push.AggregatedMetricLabel
+			serviceName = matcher.Value
+			serviceMatchType = matcher.Type.String()
+		}
+		filters = append(filters, matcher.String())
+	}
+
+	query := a.buildBaseQueryString(idxKey, serviceMatchType, serviceName)
+
+	if len(filters) > 0 {
+		query = query + " | " + strings.Join(filters, " | ")
+	}
+
+	lookBack := a.end.Sub(a.start).Truncate(time.Second)
+	query = query + fmt.Sprintf(` | unwrap bytes(bytes) | __error__=""[%s]))`, lookBack)
+	return query
 }

@@ -2,6 +2,7 @@ package queryrange
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
@@ -11,7 +12,10 @@ import (
 
 	"github.com/grafana/loki/pkg/push"
 
+	"github.com/prometheus/prometheus/model/labels"
+
 	"github.com/grafana/loki/v3/pkg/loghttp"
+	loghttp_push "github.com/grafana/loki/v3/pkg/loghttp/push"
 	"github.com/grafana/loki/v3/pkg/logproto"
 	"github.com/grafana/loki/v3/pkg/querier/queryrange/queryrangebase"
 	"github.com/grafana/loki/v3/pkg/storage/stores/index/seriesvolume"
@@ -348,5 +352,119 @@ func Test_VolumeMiddleware(t *testing.T) {
 			int64(1000000005000),
 			promResp.Data.Result[0].Samples[4].TimestampMs,
 			"last timestamp should be equal to the end of the requested query range")
+	})
+}
+
+func Test_aggregatedMetricQuery(t *testing.T) {
+	now := time.Now()
+	serviceMatcher := labels.MustNewMatcher(labels.MatchEqual, loghttp_push.LabelServiceName, "foo")
+	fruitMatcher := labels.MustNewMatcher(labels.MatchNotEqual, "fruit", "apple")
+	colorMatcher := labels.MustNewMatcher(labels.MatchRegexp, "color", "green")
+
+	t.Run("it uses service name if present in original matcher", func(t *testing.T) {
+		query := &aggregatedMetricQuery{
+			matchers: []*labels.Matcher{serviceMatcher},
+			start:    now.Add(-1 * time.Hour),
+			end:      now,
+		}
+
+		expected := fmt.Sprintf(
+			`sum by (service_name) (sum_over_time({%s="foo"} | logfmt | service_name="foo" | unwrap bytes(bytes) | __error__=""[1h0m0s]))`,
+			loghttp_push.AggregatedMetricLabel,
+		)
+		require.Equal(t, expected, query.BuildQuery())
+	})
+
+	t.Run("it includes additional matchers as line filters", func(t *testing.T) {
+		query := &aggregatedMetricQuery{
+			matchers: []*labels.Matcher{serviceMatcher, fruitMatcher},
+			start:    now.Add(-30 * time.Minute),
+			end:      now,
+		}
+
+		expected := fmt.Sprintf(
+			`sum by (service_name) (sum_over_time({%s="foo"} | logfmt | service_name="foo" | fruit!="apple" | unwrap bytes(bytes) | __error__=""[30m0s]))`,
+			loghttp_push.AggregatedMetricLabel,
+		)
+		require.Equal(t, expected, query.BuildQuery())
+	})
+
+	t.Run("preserves the matcher type for service name", func(t *testing.T) {
+		serviceMatcher := labels.MustNewMatcher(
+			labels.MatchRegexp,
+			loghttp_push.LabelServiceName,
+			"foo",
+		)
+
+		query := &aggregatedMetricQuery{
+			matchers: []*labels.Matcher{serviceMatcher},
+			start:    now.Add(-1 * time.Hour),
+			end:      now,
+		}
+
+		expected := fmt.Sprintf(
+			`sum by (service_name) (sum_over_time({%s=~"foo"} | logfmt | service_name=~"foo" | unwrap bytes(bytes) | __error__=""[1h0m0s]))`,
+			loghttp_push.AggregatedMetricLabel,
+		)
+		require.Equal(t, expected, query.BuildQuery())
+	})
+
+	t.Run("preserves the matcher type for additional matchers", func(t *testing.T) {
+		query := &aggregatedMetricQuery{
+			matchers: []*labels.Matcher{serviceMatcher, fruitMatcher, colorMatcher},
+			start:    now.Add(-5 * time.Minute),
+			end:      now,
+		}
+
+		expected := fmt.Sprintf(
+			`sum by (service_name) (sum_over_time({%s="foo"} | logfmt | service_name="foo" | fruit!="apple" | color=~"green" | unwrap bytes(bytes) | __error__=""[5m0s]))`,
+			loghttp_push.AggregatedMetricLabel,
+		)
+		require.Equal(t, expected, query.BuildQuery())
+	})
+
+	t.Run(
+		"if service_name is not present, it uses a wildcard matcher and aggregated by the first matcher",
+		func(t *testing.T) {
+			query := &aggregatedMetricQuery{
+				matchers: []*labels.Matcher{fruitMatcher, colorMatcher},
+				start:    now.Add(-30 * time.Minute).Add(-5 * time.Second),
+				end:      now,
+			}
+
+			expected := fmt.Sprintf(
+				`sum by (fruit) (sum_over_time({%s=~".+"} | logfmt | fruit!="apple" | color=~"green" | unwrap bytes(bytes) | __error__=""[30m5s]))`,
+				loghttp_push.AggregatedMetricLabel,
+			)
+			require.Equal(t, expected, query.BuildQuery())
+		},
+	)
+
+	t.Run("it aggregates by aggregate_by when provided", func(t *testing.T) {
+		query := &aggregatedMetricQuery{
+			matchers:    []*labels.Matcher{fruitMatcher, colorMatcher},
+			start:       now.Add(-30 * time.Minute),
+			end:         now,
+			aggregateBy: "color,fruit",
+		}
+
+		expected := fmt.Sprintf(
+			`sum by (color,fruit) (sum_over_time({%s=~".+"} | logfmt | fruit!="apple" | color=~"green" | unwrap bytes(bytes) | __error__=""[30m0s]))`,
+			loghttp_push.AggregatedMetricLabel,
+		)
+		require.Equal(t, expected, query.BuildQuery())
+
+		query = &aggregatedMetricQuery{
+			matchers:    []*labels.Matcher{serviceMatcher},
+			start:       now.Add(-5 * time.Second),
+			end:         now,
+			aggregateBy: "fruit",
+		}
+
+		expected = fmt.Sprintf(
+			`sum by (fruit) (sum_over_time({%s="foo"} | logfmt | service_name="foo" | unwrap bytes(bytes) | __error__=""[5s]))`,
+			loghttp_push.AggregatedMetricLabel,
+		)
+		require.Equal(t, expected, query.BuildQuery())
 	})
 }
