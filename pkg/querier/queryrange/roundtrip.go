@@ -1217,7 +1217,7 @@ func aggMetricsVolumeHandler(
 	if r.GetStep() <= 0 {
 		lokiReq = &LokiInstantRequest{
 			Query:     expr.String(),
-			Limit:     1000,
+			Limit:     loghttp.DefaultQueryLimit,
 			Direction: logproto.BACKWARD,
 			TimeTs:    r.GetEnd().UTC(),
 			Path:      "/loki/api/v1/query",
@@ -1229,7 +1229,7 @@ func aggMetricsVolumeHandler(
 	} else {
 		lokiReq = &LokiRequest{
 			Query:     expr.String(),
-			Limit:     1000,
+			Limit:     loghttp.DefaultQueryLimit,
 			Step:      r.GetStep(),
 			StartTs:   r.GetStart().UTC(),
 			EndTs:     r.GetEnd().UTC(),
