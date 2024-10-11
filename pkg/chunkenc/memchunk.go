@@ -1384,7 +1384,7 @@ type bufferedIterator struct {
 	smBytes      []byte
 	smReader     io.Reader // initialized later
 	smBuf        []symbol
-	smReadBuf    [2 * binary.MaxVarintLen64]byte // same, enough to contain two varints
+	smReadBuf    [3 * binary.MaxVarintLen64]byte // same, enough to contain two varints
 	smValidBytes int
 }
 
@@ -1440,21 +1440,22 @@ func (si *bufferedIterator) Next() bool {
 	}
 
 	ts, line, structuredMetadata, ok := si.moveNext()
+	level.Debug(util_log.Logger).Log("s_", structuredMetadata, "ts_", ts)
 	if !ok {
 		si.Close()
 		return false
 	}
 
-	si.currTs = ts
+	si.currTs = ts_
 	si.currLine = line
-	si.currStructuredMetadata = structuredMetadata
+	si.currStructuredMetadata = s_
 	return true
 }
 
 // moveNextMetadata only iterates over the metadata block
 
 func (si *bufferedIterator) moveNextMetadata() (int64, labels.Labels, bool) {
-	var smWidth, smLength, tWidth, lastAttempt int
+	var smWidth, smLength, tWidth, lastAttempt, sw int
 	var ts int64
 	for smWidth == 0 {
 		n, err := si.smReader.Read(si.smReadBuf[si.smValidBytes:])
@@ -1474,7 +1475,8 @@ func (si *bufferedIterator) moveNextMetadata() (int64, labels.Labels, bool) {
 		}
 		var sm uint64
 		ts, tWidth = binary.Varint(si.smReadBuf[:si.smValidBytes])
-		sm, smWidth = binary.Uvarint(si.smReadBuf[tWidth:si.smValidBytes])
+		_, sw = binary.Uvarint(si.smReadBuf[tWidth:si.smValidBytes])
+		sm, smWidth = binary.Uvarint(si.smReadBuf[tWidth+sw : si.smValidBytes])
 
 		smLength = int(sm)
 		lastAttempt = si.smValidBytes
@@ -1496,7 +1498,7 @@ func (si *bufferedIterator) moveNextMetadata() (int64, labels.Labels, bool) {
 	si.smBuf = si.smBuf[:smLength]
 
 	// shift down what is still left in the fixed-size read buffer, if any
-	si.smValidBytes = copy(si.smReadBuf[:], si.smReadBuf[smWidth+tWidth:si.smValidBytes])
+	si.smValidBytes = copy(si.smReadBuf[:], si.smReadBuf[smWidth+sw+tWidth:si.smValidBytes])
 
 	for i := 0; i < smLength; i++ {
 		var name, val uint64

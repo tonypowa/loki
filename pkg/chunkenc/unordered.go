@@ -478,7 +478,7 @@ func (hb *unorderedHeadBlock) SerialiseStructuredMetadata(pool compression.Write
 
 			symbolsSectionBuf.Reset()
 			n = binary.PutUvarint(encBuf, uint64(len(structuredMetadataSymbols)))
-			inBuf.Write(encBuf[:n])
+			symbolsSectionBuf.Write(encBuf[:n])
 
 			for _, l := range structuredMetadataSymbols {
 				n = binary.PutUvarint(encBuf, uint64(l.Name))
