@@ -11,8 +11,6 @@ import (
 
 	"github.com/Workiva/go-datastructures/rangetree"
 	"github.com/cespare/xxhash/v2"
-	"github.com/go-kit/log/level"
-	util_log "github.com/grafana/loki/v3/pkg/util/log"
 	"github.com/pkg/errors"
 	"github.com/prometheus/prometheus/model/labels"
 
@@ -32,6 +30,7 @@ type HeadBlock interface {
 	CheckpointSize() int
 	LoadBytes(b []byte) error
 	Serialise(pool compression.WriterPool) ([]byte, error)
+	SerialiseStructuredMetadata(pool compression.WriterPool) ([]byte, error)
 	Reset()
 	Bounds() (mint, maxt int64)
 	Entries() int
@@ -389,17 +388,11 @@ func (hb *unorderedHeadBlock) Serialise(pool compression.WriterPool) ([]byte, er
 		serializeBytesBufferPool.Put(symbolsSectionBuf)
 	}()
 
-	tsBuf := serializeBytesBufferPool.Get().(*bytes.Buffer)
 	lineBuf := serializeBytesBufferPool.Get().(*bytes.Buffer)
-	metadataBuf := serializeBytesBufferPool.Get().(*bytes.Buffer)
 	// put all three buffers back in the pool
 	defer func() {
-		tsBuf.Reset()
-		serializeBytesBufferPool.Put(tsBuf)
 		lineBuf.Reset()
 		serializeBytesBufferPool.Put(lineBuf)
-		metadataBuf.Reset()
-		serializeBytesBufferPool.Put(metadataBuf)
 	}()
 
 	outBuf := &bytes.Buffer{}
@@ -407,70 +400,6 @@ func (hb *unorderedHeadBlock) Serialise(pool compression.WriterPool) ([]byte, er
 	encBuf := make([]byte, binary.MaxVarintLen64)
 	compressedWriter := pool.GetWriter(outBuf)
 	defer pool.PutWriter(compressedWriter)
-
-	if hb.format == UnorderedWithOrganizedStructuredMetadataHeadBlockFmt {
-		tsBuf.Reset()
-		lineBuf.Reset()
-		metadataBuf.Reset()
-
-		err := hb.forEntries(context.Background(), logproto.FORWARD, 0, math.MaxInt64,
-			func(_ *stats.Context, ts int64, line string, structuredMetadataSymbols symbols) error {
-				symbolsSectionBuf.Reset()
-
-				// write ts to tsBuf
-				n := binary.PutVarint(encBuf, ts)
-				tsBuf.Write(encBuf[:n])
-				level.Debug(util_log.Logger).Log("bytes_written", n)
-
-				for _, l := range structuredMetadataSymbols {
-					n = binary.PutUvarint(encBuf, uint64(l.Name))
-					symbolsSectionBuf.Write(encBuf[:n])
-
-					n = binary.PutUvarint(encBuf, uint64(l.Value))
-					symbolsSectionBuf.Write(encBuf[:n])
-				}
-
-				// write `len(symbolsSection) | symbolsSection` to metadataBuf
-				n = binary.PutUvarint(encBuf, uint64(symbolsSectionBuf.Len()))
-				metadataBuf.Write(encBuf[:n])
-				metadataBuf.Write(symbolsSectionBuf.Bytes())
-
-				// write `len(line) | line` to lineBuf
-				n = binary.PutUvarint(encBuf, uint64(len(line)))
-				lineBuf.Write(encBuf[:n])
-				lineBuf.WriteString(line)
-				return nil
-			})
-
-		// inBuf is now tsBuf | metadataBuf | lineBuf
-		n := binary.PutUvarint(encBuf, uint64(tsBuf.Len()))
-		inBuf.Write(encBuf[:n])
-
-		n = binary.PutUvarint(encBuf, uint64(metadataBuf.Len()))
-		inBuf.Write(encBuf[:n])
-
-		n = binary.PutUvarint(encBuf, uint64(lineBuf.Len()))
-		inBuf.Write(encBuf[:n])
-
-		inBuf.Write(tsBuf.Bytes())
-		inBuf.Write(metadataBuf.Bytes())
-		inBuf.Write(lineBuf.Bytes())
-
-		if err != nil {
-			return nil, errors.Wrap(err, "iterating through entries")
-		}
-
-		// return early as the subsequent code again iterates through lines which is not needed.
-		if _, err := compressedWriter.Write(inBuf.Bytes()); err != nil {
-			return nil, errors.Wrap(err, "appending entry")
-		}
-		if err := compressedWriter.Close(); err != nil {
-			return nil, errors.Wrap(err, "flushing pending compress buffer")
-		}
-
-		return outBuf.Bytes(), nil
-
-	}
 
 	_ = hb.forEntries(
 		context.Background(),
@@ -525,6 +454,63 @@ func (hb *unorderedHeadBlock) Serialise(pool compression.WriterPool) ([]byte, er
 	return outBuf.Bytes(), nil
 }
 
+func (hb *unorderedHeadBlock) SerialiseStructuredMetadata(pool compression.WriterPool) ([]byte, error) {
+	inBuf := serializeBytesBufferPool.Get().(*bytes.Buffer)
+	encBuf := make([]byte, binary.MaxVarintLen64)
+
+	defer func() {
+		inBuf.Reset()
+		serializeBytesBufferPool.Put(inBuf)
+	}()
+
+	symbolsSectionBuf := serializeBytesBufferPool.Get().(*bytes.Buffer)
+	if hb.format < UnorderedWithStructuredMetadataHeadBlockFmt {
+		panic("structured metadata is not supported for this head block format")
+	}
+
+	outBuf := &bytes.Buffer{}
+	compressedWriter := pool.GetWriter(outBuf)
+
+	err := hb.forEntries(context.Background(), logproto.FORWARD, 0, math.MaxInt64,
+		func(_ *stats.Context, ts int64, line string, structuredMetadataSymbols symbols) error {
+			n := binary.PutVarint(encBuf, ts)
+			inBuf.Write(encBuf[:n])
+
+			symbolsSectionBuf.Reset()
+			n = binary.PutUvarint(encBuf, uint64(len(structuredMetadataSymbols)))
+			inBuf.Write(encBuf[:n])
+
+			for _, l := range structuredMetadataSymbols {
+				n = binary.PutUvarint(encBuf, uint64(l.Name))
+				symbolsSectionBuf.Write(encBuf[:n])
+
+				n = binary.PutUvarint(encBuf, uint64(l.Value))
+				symbolsSectionBuf.Write(encBuf[:n])
+			}
+
+			// write the length of symbols section first
+			n = binary.PutUvarint(encBuf, uint64(symbolsSectionBuf.Len()))
+			inBuf.Write(encBuf[:n])
+
+			// copy the symbols section
+			inBuf.Write(symbolsSectionBuf.Bytes())
+
+			return nil
+		},
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if _, err := compressedWriter.Write(inBuf.Bytes()); err != nil {
+		return nil, errors.Wrap(err, "appending entry")
+	}
+	if err := compressedWriter.Close(); err != nil {
+		return nil, errors.Wrap(err, "flushing pending compress buffer")
+	}
+	return outBuf.Bytes(), nil
+}
 func (hb *unorderedHeadBlock) Convert(version HeadBlockFmt, symbolizer *symbolizer) (HeadBlock, error) {
 	if hb.format == version {
 		return hb, nil

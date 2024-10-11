@@ -156,6 +156,8 @@ type block struct {
 
 	offset           int // The offset of the block in the chunk.
 	uncompressedSize int // Total uncompressed size in bytes when the chunk is cut.
+	// compressed structured metadata only for chunkv5
+	sm []byte
 }
 
 // This block holds the un-compressed entries. Once it has enough data, this is
@@ -234,6 +236,10 @@ func (hb *headBlock) Serialise(pool compression.WriterPool) ([]byte, error) {
 	}
 
 	return outBuf.Bytes(), nil
+}
+
+func (hb *headBlock) SerialiseStructuredMetadata(pool compression.WriterPool) ([]byte, error) {
+	return nil, errors.Wrap(nil, "head block does not support serializing structured metadata")
 }
 
 // CheckpointBytes serializes a headblock to []byte. This is used by the WAL checkpointing,
@@ -956,9 +962,18 @@ func (c *MemChunk) cut() error {
 		return err
 	}
 
+	var sm []byte
+	if c.format == ChunkFormatV5 {
+		sm, err = c.head.SerialiseStructuredMetadata(compression.GetWriterPool(c.encoding))
+		if err != nil {
+			return err
+		}
+	}
+
 	mint, maxt := c.head.Bounds()
 	c.blocks = append(c.blocks, block{
 		b:                b,
+		sm:               sm,
 		numEntries:       c.head.Entries(),
 		mint:             mint,
 		maxt:             maxt,
@@ -1192,14 +1207,14 @@ func (b encBlock) Iterator(ctx context.Context, pipeline log.StreamPipeline) ite
 	if len(b.b) == 0 {
 		return iter.NoopEntryIterator
 	}
-	return newEntryIterator(ctx, compression.GetReaderPool(b.enc), b.b, pipeline, b.format, b.symbolizer)
+	return newEntryIterator(ctx, compression.GetReaderPool(b.enc), b.b, pipeline, b.format, b.symbolizer, b.sm)
 }
 
 func (b encBlock) SampleIterator(ctx context.Context, extractor log.StreamSampleExtractor) iter.SampleIterator {
 	if len(b.b) == 0 {
 		return iter.NoopSampleIterator
 	}
-	return newSampleIterator(ctx, compression.GetReaderPool(b.enc), b.b, b.format, extractor, b.symbolizer)
+	return newSampleIterator(ctx, compression.GetReaderPool(b.enc), b.b, b.format, extractor, b.symbolizer, b.sm)
 }
 
 func (b block) Offset() int {
@@ -1365,23 +1380,33 @@ type bufferedIterator struct {
 	symbolsBuf             []symbol      // The buffer for a single entry's symbols.
 	currStructuredMetadata labels.Labels // The current labels.
 
-	closed bool
+	closed       bool
+	smBytes      []byte
+	smReader     io.Reader // initialized later
+	smBuf        []symbol
+	smReadBuf    [2 * binary.MaxVarintLen64]byte // same, enough to contain two varints
+	smValidBytes int
 }
 
-func newBufferedIterator(ctx context.Context, pool compression.ReaderPool, b []byte, format byte, symbolizer *symbolizer) *bufferedIterator {
+func newBufferedIterator(ctx context.Context, pool compression.ReaderPool, b []byte, format byte, symbolizer *symbolizer, sm []byte) *bufferedIterator {
 	stats := stats.FromContext(ctx)
 	stats.AddCompressedBytes(int64(len(b)))
 	return &bufferedIterator{
 		stats:      stats,
 		origBytes:  b,
+		smBytes:    sm,
 		reader:     nil, // will be initialized later
 		pool:       pool,
 		format:     format,
 		symbolizer: symbolizer,
+		smReader:   nil,
 	}
 }
 
 func (si *bufferedIterator) Next() bool {
+	var structuredMetadata, s_ []labels.Label
+	var ts, ts_ int64
+
 	if si.closed {
 		return false
 	}
@@ -1396,6 +1421,24 @@ func (si *bufferedIterator) Next() bool {
 		}
 	}
 
+	if si.smBytes != nil {
+		if si.smReader == nil {
+			var err error
+			si.smReader, err = si.pool.GetReader(bytes.NewBuffer(si.smBytes))
+			if err != nil {
+				si.err = err
+				return false
+			}
+		}
+		var ok bool
+		ts_, s_, ok = si.moveNextMetadata()
+		level.Debug(util_log.Logger).Log("s_", s_, "ts_", ts_)
+		if !ok {
+			return false
+		}
+
+	}
+
 	ts, line, structuredMetadata, ok := si.moveNext()
 	if !ok {
 		si.Close()
@@ -1406,6 +1449,83 @@ func (si *bufferedIterator) Next() bool {
 	si.currLine = line
 	si.currStructuredMetadata = structuredMetadata
 	return true
+}
+
+// moveNextMetadata only iterates over the metadata block
+
+func (si *bufferedIterator) moveNextMetadata() (int64, labels.Labels, bool) {
+	var smWidth, smLength, tWidth, lastAttempt int
+	var ts int64
+	for smWidth == 0 {
+		n, err := si.smReader.Read(si.smReadBuf[si.smValidBytes:])
+		si.smValidBytes += n
+		if err != nil {
+			if err != io.EOF {
+				si.err = err
+				return 0, nil, false
+			}
+			if si.smValidBytes == 0 {
+				return 0, nil, false
+			}
+			if si.smValidBytes == lastAttempt {
+				si.err = fmt.Errorf("invalid data in chunk")
+				return 0, nil, false
+			}
+		}
+		var sm uint64
+		ts, tWidth = binary.Varint(si.smReadBuf[:si.smValidBytes])
+		sm, smWidth = binary.Uvarint(si.smReadBuf[tWidth:si.smValidBytes])
+
+		smLength = int(sm)
+		lastAttempt = si.smValidBytes
+	}
+
+	// check if we have enough buffer to fetch the entire metadata symbols
+	if si.smBuf == nil || smLength > cap(si.smBuf) {
+		// need a new pool
+		if si.smBuf != nil {
+			BytesBufferPool.Put(si.smBuf)
+		}
+		si.smBuf = SymbolsPool.Get(smLength).([]symbol)
+		if smLength > cap(si.smBuf) {
+			si.err = fmt.Errorf("could not get a line buffer of size %d, actual %d", smLength, cap(si.smBuf))
+			return 0, nil, false
+		}
+	}
+
+	si.smBuf = si.smBuf[:smLength]
+
+	// shift down what is still left in the fixed-size read buffer, if any
+	si.smValidBytes = copy(si.smReadBuf[:], si.smReadBuf[smWidth+tWidth:si.smValidBytes])
+
+	for i := 0; i < smLength; i++ {
+		var name, val uint64
+		var nw, vw int
+		for vw == 0 {
+			n, err := si.smReader.Read(si.smReadBuf[si.smValidBytes:])
+			si.smValidBytes += n
+			if err != nil {
+				if err != io.EOF {
+					si.err = err
+					return 0, nil, false
+				}
+				if si.smValidBytes == 0 {
+					return 0, nil, false
+				}
+			}
+			name, nw = binary.Uvarint(si.smReadBuf[:si.smValidBytes])
+			val, vw = binary.Uvarint(si.smReadBuf[nw:si.smValidBytes])
+		}
+
+		// Shift down what is still left in the fixed-size read buffer, if any.
+		si.smValidBytes = copy(si.smReadBuf[:], si.smReadBuf[nw+vw:si.smValidBytes])
+
+		si.smBuf[i].Name = uint32(name)
+		si.smBuf[i].Value = uint32(val)
+	}
+
+	return ts, si.symbolizer.Lookup(si.smBuf[:smLength], si.currStructuredMetadata), true
+
 }
 
 // moveNext moves the buffer to the next entry
@@ -1611,6 +1731,11 @@ func (si *bufferedIterator) close() {
 		si.reader = nil
 	}
 
+	if si.smReader != nil {
+		si.pool.PutReader(si.smReader)
+		si.smReader = nil
+	}
+
 	if si.buf != nil {
 		BytesBufferPool.Put(si.buf)
 		si.buf = nil
@@ -1629,9 +1754,9 @@ func (si *bufferedIterator) close() {
 	si.origBytes = nil
 }
 
-func newEntryIterator(ctx context.Context, pool compression.ReaderPool, b []byte, pipeline log.StreamPipeline, format byte, symbolizer *symbolizer) iter.EntryIterator {
+func newEntryIterator(ctx context.Context, pool compression.ReaderPool, b []byte, pipeline log.StreamPipeline, format byte, symbolizer *symbolizer, sm []byte) iter.EntryIterator {
 	return &entryBufferedIterator{
-		bufferedIterator: newBufferedIterator(ctx, pool, b, format, symbolizer),
+		bufferedIterator: newBufferedIterator(ctx, pool, b, format, symbolizer, sm),
 		pipeline:         pipeline,
 		stats:            stats.FromContext(ctx),
 	}
@@ -1681,9 +1806,9 @@ func (e *entryBufferedIterator) Close() error {
 	return e.bufferedIterator.Close()
 }
 
-func newSampleIterator(ctx context.Context, pool compression.ReaderPool, b []byte, format byte, extractor log.StreamSampleExtractor, symbolizer *symbolizer) iter.SampleIterator {
+func newSampleIterator(ctx context.Context, pool compression.ReaderPool, b []byte, format byte, extractor log.StreamSampleExtractor, symbolizer *symbolizer, smbytes []byte) iter.SampleIterator {
 	return &sampleBufferedIterator{
-		bufferedIterator: newBufferedIterator(ctx, pool, b, format, symbolizer),
+		bufferedIterator: newBufferedIterator(ctx, pool, b, format, symbolizer, smbytes),
 		extractor:        extractor,
 		stats:            stats.FromContext(ctx),
 	}

@@ -115,12 +115,6 @@ type SampleIteratorHeap struct {
 	its []SampleIterator
 }
 
-func NewSampleIteratorHeap(its []SampleIterator) SampleIteratorHeap {
-	return SampleIteratorHeap{
-		its: its,
-	}
-}
-
 func (h SampleIteratorHeap) Len() int             { return len(h.its) }
 func (h SampleIteratorHeap) Swap(i, j int)        { h.its[i], h.its[j] = h.its[j], h.its[i] }
 func (h SampleIteratorHeap) Peek() SampleIterator { return h.its[0] }
