@@ -1440,6 +1440,10 @@ func (si *bufferedIterator) Next() bool {
 	}
 
 	ts, line, structuredMetadata, ok := si.moveNext()
+	if ts != ts_ {
+		level.Error(util_log.Logger).Log("msg", "metadata and log entry timestamps do not match", "metadata_ts", ts_, "log_ts", ts)
+	}
+
 	level.Debug(util_log.Logger).Log("s_", structuredMetadata, "ts_", ts)
 	if !ok {
 		si.Close()
@@ -1453,7 +1457,6 @@ func (si *bufferedIterator) Next() bool {
 }
 
 // moveNextMetadata only iterates over the metadata block
-
 func (si *bufferedIterator) moveNextMetadata() (int64, labels.Labels, bool) {
 	var smWidth, smLength, tWidth, lastAttempt, sw int
 	var ts int64
