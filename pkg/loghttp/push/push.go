@@ -107,7 +107,7 @@ type Stats struct {
 }
 
 func ParseRequest(logger log.Logger, userID string, r *http.Request, tenantsRetention TenantsRetention, limits Limits, pushRequestParser RequestParser, tracker UsageTracker, logPushRequestStreams bool) (*logproto.PushRequest, error) {
-	span, ctx := opentracing.StartSpanFromContext(r.Context(), "ParseRequest")
+	span, ctx := opentracing.StartSpanFromContext(r.Context(), "parseRequest")
 	defer span.Finish()
 	r = r.WithContext(ctx)
 	req, pushStats, err := pushRequestParser(userID, r, tenantsRetention, limits, tracker, logPushRequestStreams, logger)
