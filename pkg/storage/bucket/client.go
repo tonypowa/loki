@@ -50,11 +50,11 @@ var (
 // StorageBackendConfig holds configuration for accessing long-term storage.
 type StorageBackendConfig struct {
 	// Backends
-	S3         s3.Config         `yaml:"s3" doc:"hidden"`
+	S3         s3.Config         `yaml:"s3"`
 	GCS        gcs.Config        `yaml:"gcs"`
-	Azure      azure.Config      `yaml:"azure" doc:"hidden"`
-	Swift      swift.Config      `yaml:"swift" doc:"hidden"`
-	Filesystem filesystem.Config `yaml:"filesystem" doc:"hidden"`
+	Azure      azure.Config      `yaml:"azure"`
+	Swift      swift.Config      `yaml:"swift"`
+	Filesystem filesystem.Config `yaml:"filesystem"`
 
 	// Used to inject additional backends into the config. Allows for this config to
 	// be embedded in multiple contexts and support non-object storage based backends.
@@ -71,14 +71,12 @@ func (cfg *StorageBackendConfig) RegisterFlags(f *flag.FlagSet) {
 	cfg.RegisterFlagsWithPrefix("", f)
 }
 
-func (cfg *StorageBackendConfig) RegisterFlagsWithPrefixAndDefaultDirectory(prefix, _ string, f *flag.FlagSet) {
+func (cfg *StorageBackendConfig) RegisterFlagsWithPrefixAndDefaultDirectory(prefix, dir string, f *flag.FlagSet) {
 	cfg.GCS.RegisterFlagsWithPrefix(prefix, f)
-
-	// TODO: uncomment when other providers are supported
-	// cfg.S3.RegisterFlagsWithPrefix(prefix, f)
-	// cfg.Azure.RegisterFlagsWithPrefix(prefix, f)
-	// cfg.Swift.RegisterFlagsWithPrefix(prefix, f)
-	// cfg.Filesystem.RegisterFlagsWithPrefixAndDefaultDirectory(prefix, dir, f)
+	cfg.S3.RegisterFlagsWithPrefix(prefix, f)
+	cfg.Azure.RegisterFlagsWithPrefix(prefix, f)
+	cfg.Swift.RegisterFlagsWithPrefix(prefix, f)
+	cfg.Filesystem.RegisterFlagsWithPrefixAndDefaultDirectory(prefix, dir, f)
 }
 
 func (cfg *StorageBackendConfig) RegisterFlagsWithPrefix(prefix string, f *flag.FlagSet) {
@@ -110,8 +108,8 @@ func (cfg *Config) RegisterFlags(f *flag.FlagSet) {
 }
 
 func (cfg *Config) RegisterFlagsWithPrefixAndDefaultDirectory(prefix, dir string, f *flag.FlagSet) {
-	cfg.StorageBackendConfig.RegisterFlagsWithPrefixAndDefaultDirectory(prefix+"object-store.", dir, f)
-	f.StringVar(&cfg.StoragePrefix, prefix+"object-store."+"storage-prefix", "", "Prefix for all objects stored in the backend storage. For simplicity, it may only contain digits and English alphabet letters.")
+	cfg.StorageBackendConfig.RegisterFlagsWithPrefixAndDefaultDirectory(prefix, dir, f)
+	f.StringVar(&cfg.StoragePrefix, prefix+"storage-prefix", "", "Prefix for all objects stored in the backend storage. For simplicity, it may only contain digits and English alphabet letters.")
 }
 
 func (cfg *Config) RegisterFlagsWithPrefix(prefix string, f *flag.FlagSet) {
