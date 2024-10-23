@@ -1,10 +1,14 @@
-# Adapted from https://www.thapaliya.com/en/writings/well-documented-makefiles/
-.PHONY: help
-help: ## Display this help and any documented user-facing targets. Other undocumented targets may be present in the Makefile.
-help:
-	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make <target>\n\nTargets:\n"} /^[a-zA-Z_-]+:.*?##/ { printf "  %-45s %s\n", $$1, $$2 }' $(MAKEFILE_LIST)
+# Loki Project Makefile
+#
+#
+SHELL = /usr/bin/env bash -o pipefail
 
 .DEFAULT_GOAL := all
+
+# Adapted from https://www.thapaliya.com/en/writings/well-documented-makefiles/
+help: ## Display this help
+	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z_-]+:.*?##/ { printf "  \033[36m%-45s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
+
 .PHONY: all images check-generated-files logcli loki loki-debug promtail promtail-debug loki-canary loki-canary-boringcrypto lint test clean yacc protos touch-protobuf-sources
 .PHONY: format check-format
 .PHONY: docker-driver docker-driver-clean docker-driver-enable docker-driver-push
@@ -19,8 +23,6 @@ help:
 .PHONY: clean clean-protos
 .PHONY: k3d-loki k3d-enterprise-logs k3d-down
 .PHONY: helm-test helm-lint
-
-SHELL = /usr/bin/env bash -o pipefail
 
 GOTEST ?= go test
 
