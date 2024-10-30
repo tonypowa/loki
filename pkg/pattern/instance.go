@@ -314,7 +314,7 @@ func (i *instance) writeAggregatedMetrics(
 	}
 
 	newLbls := labels.Labels{
-		labels.Label{Name: push.AggregatedMetricLabel, Value: service},
+		labels.Label{Name: constants.AggregatedMetricLabel, Value: service},
 		labels.Label{Name: "level", Value: level},
 	}
 

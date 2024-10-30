@@ -393,6 +393,10 @@ func (t *Loki) initQuerier() (services.Service, error) {
 		return nil, err
 	}
 
+  if t.Cfg.Pattern.MetricAggregation.Enabled {
+    t.Cfg.Querier.MetricAggregationEnabled = true
+  }
+
 	if t.Cfg.QuerierRF1.Enabled {
 		logger.Log("Using RF-1 querier implementation")
 		store, err := objstore.New(t.Cfg.SchemaConfig.Configs, t.Cfg.StorageConfig, t.ClientMetrics)

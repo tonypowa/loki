@@ -11,6 +11,7 @@ import (
 
 	"github.com/grafana/loki/v3/pkg/loghttp/push"
 	"github.com/grafana/loki/v3/pkg/logproto"
+	"github.com/grafana/loki/v3/pkg/util/constants"
 	"github.com/grafana/loki/v3/pkg/validation"
 )
 
@@ -164,7 +165,7 @@ func (v Validator) ValidateLabels(ctx validationContext, ls labels.Labels, strea
 	}
 
 	// Skip validation for aggregated metric streams, as we create those for internal use
-	if ls.Has(push.AggregatedMetricLabel) {
+	if ls.Has(constants.AggregatedMetricLabel) {
 		return nil
 	}
 
