@@ -432,6 +432,13 @@ func (i *Ingester) flushChunks(ctx context.Context, fp model.Fingerprint, labelP
 			return fmt.Errorf("chunk close for flushing: %w", err)
 		}
 
+		if i.cfg.KafkaIngestion.Enabled && !i.cfg.KafkaIngestion.WriteChunksToStore {
+			// Short-circuit the flushing process if we're not writing chunks to the store.
+			// This will discard the chunk without storing it and will discard data!
+			level.Warn(i.logger).Log("msg", "discarding chunk without storing it", "user", userID, "fp", fp)
+			i.markChunkAsFlushed(cs[j], chunkMtx)
+			continue
+		}
 		firstTime, lastTime := util.RoundToMilliseconds(c.chunk.Bounds())
 		ch := chunk.NewChunk(
 			userID, fp, metric,

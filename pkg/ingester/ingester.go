@@ -192,6 +192,7 @@ func (cfg *Config) Validate() error {
 
 type KafkaIngestionConfig struct {
 	Enabled             bool                 `yaml:"enabled" doc:"description=Whether the kafka ingester is enabled."`
+	WriteChunksToStore  bool                 `yaml:"write_chunks_to_store" doc:"description=Whether the ingester should write chunks to the store when replaying from Kafka." category:"experimental"`
 	PartitionRingConfig partitionring.Config `yaml:"partition_ring" category:"experimental"`
 	KafkaConfig         kafka.Config         `yaml:"-"`
 }
@@ -199,6 +200,7 @@ type KafkaIngestionConfig struct {
 func (cfg *KafkaIngestionConfig) RegisterFlags(f *flag.FlagSet) {
 	cfg.PartitionRingConfig.RegisterFlagsWithPrefix("ingester.", f)
 	f.BoolVar(&cfg.Enabled, "ingester.kafka-ingestion-enabled", false, "Whether the ingester will consume data from kafka.")
+	f.BoolVar(&cfg.WriteChunksToStore, "ingester.kafka-write-chunks-to-store", true, "Whether the ingester write chunks to the store or discard them on flush.")
 }
 
 type Wrapper interface {
