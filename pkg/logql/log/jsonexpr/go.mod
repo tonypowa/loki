@@ -1,4 +1,4 @@
-module github.com/grafana/loki/v3/pkg/logql/log/jsonexpr
+module github.com/grafana/loki/pkg/logql/log/jsonexpr
 
 go 1.23.1
 

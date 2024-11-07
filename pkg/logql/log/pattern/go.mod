@@ -1,4 +1,4 @@
-module github.com/grafana/loki/v3/pkg/logql/log/pattern
+module github.com/grafana/loki/pkg/logql/log/pattern
 
 go 1.23.1
 

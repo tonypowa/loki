@@ -1,4 +1,4 @@
-module github.com/grafana/loki/v3/pkg/util/regexp
+module github.com/grafana/loki/pkg/util/regexp
 
 go 1.23.1
 

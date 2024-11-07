@@ -1,4 +1,4 @@
-module github.com/grafana/loki/v3/pkg/logql/log
+module github.com/grafana/loki/pkg/logql/log
 
 go 1.23.1
 

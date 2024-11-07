@@ -1,4 +1,4 @@
-module github.com/grafana/loki/v3/pkg/util/encoding
+module github.com/grafana/loki/pkg/util/encoding
 
 go 1.23.1
 
