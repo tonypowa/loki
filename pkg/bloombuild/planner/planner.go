@@ -227,10 +227,11 @@ func (p *Planner) runOne(ctx context.Context) error {
 	}
 
 	var (
-		wg        sync.WaitGroup
-		start     = time.Now()
-		status    = statusFailure
-		openTSDBs strategies.TSDBSet
+		wg               sync.WaitGroup
+		start            = time.Now()
+		status           = statusFailure
+		openTSDBs        strategies.TSDBSet
+		openTSDBsInTasks strategies.TSDBSet
 	)
 	defer func() {
 		p.metrics.buildCompleted.WithLabelValues(status).Inc()
@@ -308,6 +309,8 @@ func (p *Planner) runOne(ctx context.Context) error {
 
 			now := time.Now()
 			for _, task := range tasks {
+				openTSDBsInTasks[task.TSDB] = openTSDBs[task.TSDB]
+
 				queueTask := NewQueueTask(ctx, now, task, openTSDBs[task.TSDB], resultsCh)
 				if err := p.enqueueTask(queueTask); err != nil {
 					level.Error(logger).Log("msg", "error enqueuing task", "err", err)
@@ -335,8 +338,10 @@ func (p *Planner) runOne(ctx context.Context) error {
 		"tenantTables", len(tasksResultForTenantTable),
 		"tasks", totalTasks,
 		"time", time.Since(start).Seconds(),
+		"openTSDBs", len(openTSDBs),
+		"openTSDBsInTasks", len(openTSDBsInTasks),
 	)
-
+	
 	// Create a goroutine to process the results for each table tenant tuple
 	// TODO(salvacorts): This may end up creating too many goroutines.
 	//                   Create a pool of workers to process table-tenant tuples.
