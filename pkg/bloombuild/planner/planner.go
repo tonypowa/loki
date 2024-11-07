@@ -227,10 +227,9 @@ func (p *Planner) runOne(ctx context.Context) error {
 	}
 
 	var (
-		wg        sync.WaitGroup
-		start     = time.Now()
-		status    = statusFailure
-		openTSDBs strategies.TSDBSet
+		wg     sync.WaitGroup
+		start  = time.Now()
+		status = statusFailure
 	)
 	defer func() {
 		p.metrics.buildCompleted.WithLabelValues(status).Inc()
@@ -238,15 +237,6 @@ func (p *Planner) runOne(ctx context.Context) error {
 
 		if status == statusSuccess {
 			p.metrics.buildLastSuccess.SetToCurrentTime()
-		}
-
-		// Close all open TSDBs.
-		// These are used to get the chunkrefs for the series in the gaps.
-		// We populate the chunkrefs when we send the task to the builder.
-		for idx, reader := range openTSDBs {
-			if err := reader.Close(); err != nil {
-				level.Error(p.logger).Log("msg", "failed to close tsdb", "tsdb", idx.Name(), "err", err)
-			}
 		}
 	}()
 
@@ -285,19 +275,7 @@ func (p *Planner) runOne(ctx context.Context) error {
 				table:  table,
 			}
 
-			tsdbs, err := p.tsdbStore.ResolveTSDBs(ctx, table, tenant)
-			if err != nil {
-				level.Error(logger).Log("msg", "failed to resolve tsdbs", "err", err)
-				continue
-			}
-
-			openTSDBs, err = openAllTSDBs(ctx, table, tenant, p.tsdbStore, tsdbs, openTSDBs)
-			if err != nil {
-				level.Error(logger).Log("msg", "failed to open all tsdbs", "err", err)
-				continue
-			}
-
-			tasks, existingMetas, err := p.computeTasks(ctx, table, tenant, openTSDBs)
+			tasks, existingMetas, err := p.computeTasks(ctx, table, tenant)
 			if err != nil {
 				level.Error(logger).Log("msg", "failed to compute tasks", "err", err)
 				continue
@@ -308,7 +286,7 @@ func (p *Planner) runOne(ctx context.Context) error {
 
 			now := time.Now()
 			for _, task := range tasks {
-				queueTask := NewQueueTask(ctx, now, task, openTSDBs[task.TSDB], resultsCh)
+				queueTask := NewQueueTask(ctx, now, task, resultsCh)
 				if err := p.enqueueTask(queueTask); err != nil {
 					level.Error(logger).Log("msg", "error enqueuing task", "err", err)
 					continue
@@ -396,7 +374,6 @@ func (p *Planner) computeTasks(
 	ctx context.Context,
 	table config.DayTable,
 	tenant string,
-	tsdbs strategies.TSDBSet,
 ) ([]*strategies.Task, []bloomshipper.Meta, error) {
 	strategy, err := strategies.NewStrategy(tenant, p.limits, p.logger)
 	if err != nil {
@@ -425,11 +402,28 @@ func (p *Planner) computeTasks(
 		return nil, nil, fmt.Errorf("failed to delete outdated metas during planning: %w", err)
 	}
 
+	tsdbs, err := p.tsdbStore.ResolveTSDBs(ctx, table, tenant)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to resolve tsdbs: %w", err)
+	}
+
 	if len(tsdbs) == 0 {
 		return nil, metas, nil
 	}
 
-	tasks, err := strategy.Plan(ctx, table, tenant, tsdbs, metas)
+	openTSDBs, err := openAllTSDBs(ctx, table, tenant, p.tsdbStore, tsdbs)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to open all tsdbs: %w", err)
+	}
+	defer func() {
+		for idx, reader := range openTSDBs {
+			if err := reader.Close(); err != nil {
+				level.Error(p.logger).Log("msg", "failed to close tsdb", "tsdb", idx.Name(), "err", err)
+			}
+		}
+	}()
+
+	tasks, err := strategy.Plan(ctx, table, tenant, openTSDBs, metas)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to plan tasks: %w", err)
 	}
@@ -511,26 +505,19 @@ func openAllTSDBs(
 	tenant string,
 	store common.TSDBStore,
 	tsdbs []tsdb.SingleTenantTSDBIdentifier,
-	alreadyOpen strategies.TSDBSet,
 ) (strategies.TSDBSet, error) {
-	if len(alreadyOpen) == 0 {
-		alreadyOpen = make(strategies.TSDBSet, len(tsdbs))
-	}
+	openTSDBs := make(strategies.TSDBSet, len(tsdbs))
 
 	for _, idx := range tsdbs {
-		if _, ok := alreadyOpen[idx]; ok {
-			continue
-		}
-
 		reader, err := store.LoadTSDB(ctx, table, tenant, idx)
 		if err != nil {
 			return nil, fmt.Errorf("failed to load tsdb: %w", err)
 		}
 
-		alreadyOpen[idx] = reader
+		openTSDBs[idx] = reader
 	}
 
-	return alreadyOpen, nil
+	return openTSDBs, nil
 }
 
 // deleteOutdatedMetasAndBlocks filters out the outdated metas from the `metas` argument and deletes them from the store.
@@ -860,7 +847,19 @@ func (p *Planner) forwardTaskToBuilder(
 	builderID string,
 	task *QueueTask,
 ) (*protos.TaskResult, error) {
-	protoTask, err := task.ToProtoTask(builder.Context())
+	ctx := builder.Context()
+
+	forSeries, err := p.tsdbStore.LoadTSDB(ctx, task.Table, task.Tenant, task.TSDB)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load tsdb: %w", err)
+	}
+	defer func() {
+		if err := forSeries.Close(); err != nil {
+			level.Error(p.logger).Log("msg", "failed to close tsdb reader", "err", err)
+		}
+	}()
+
+	protoTask, err := task.ToProtoTask(ctx, forSeries)
 	if err != nil {
 		return nil, fmt.Errorf("error converting task to proto task: %w", err)
 	}

@@ -2,16 +2,17 @@ package common
 
 import (
 	"context"
+	"flag"
 	"fmt"
+	"github.com/go-kit/log"
+	"github.com/grafana/loki/v3/pkg/util"
+	"github.com/pkg/errors"
+	"github.com/prometheus/common/model"
+	"github.com/prometheus/prometheus/model/labels"
 	"io"
 	"math"
 	"path"
 	"strings"
-
-	"github.com/go-kit/log"
-	"github.com/pkg/errors"
-	"github.com/prometheus/common/model"
-	"github.com/prometheus/prometheus/model/labels"
 
 	"github.com/grafana/loki/v3/pkg/compression"
 	iter "github.com/grafana/loki/v3/pkg/iter/v2"
@@ -45,18 +46,38 @@ type TSDBStore interface {
 		tenant string,
 		id tsdb.Identifier,
 	) (ClosableForSeries, error)
+	Cleanup() error
+}
+
+type TSDBStoreConfig struct {
+	SaveOnDisk bool   `yaml:"save_on_disk"`
+	Path       string `yaml:"save_on_path"`
+}
+
+func (cfg *TSDBStoreConfig) RegisterFlagsWithPrefix(prefix string, f *flag.FlagSet) {
+	f.BoolVar(&cfg.SaveOnDisk, prefix+".save_on_disk", false, "Save TSDBs on disk.")
+	f.StringVar(&cfg.Path, prefix+".path", "", "Path to save TSDBs on disk.")
 }
 
 // BloomTSDBStore is a wrapper around the storage.Client interface which
 // implements the TSDBStore interface for this pkg.
 type BloomTSDBStore struct {
+	cfg     TSDBStoreConfig
+	disk    storage.Client
 	storage storage.Client
 	logger  log.Logger
 }
 
-func NewBloomTSDBStore(storage storage.Client, logger log.Logger) *BloomTSDBStore {
+func NewBloomTSDBStore(
+	cfg TSDBStoreConfig,
+	storage storage.Client,
+	diskClient storage.Client,
+	logger log.Logger,
+) *BloomTSDBStore {
 	return &BloomTSDBStore{
+		cfg:     cfg,
 		storage: storage,
+		disk:    diskClient,
 		logger:  logger,
 	}
 }
@@ -88,6 +109,25 @@ func (b *BloomTSDBStore) ResolveTSDBs(ctx context.Context, table config.DayTable
 
 	}
 	return ids, nil
+}
+
+func (b *BloomTSDBStore) getUserFile(table, tenant, fileName string) (io.ReadCloser, error) {
+	// Check if file in on the disk
+	if b.cfg.SaveOnDisk {
+
+	}
+
+	file, err := b.storage.GetUserFile(context.Background(), table, tenant, fileName)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get file")
+	}
+
+	// Save to disk if needed
+	if b.cfg.SaveOnDisk {
+
+	}
+
+	return file, nil
 }
 
 func (b *BloomTSDBStore) LoadTSDB(
@@ -126,6 +166,16 @@ func (b *BloomTSDBStore) LoadTSDB(
 	return idx, nil
 }
 
+func (b *BloomTSDBStore) Cleanup() error {
+	if !b.cfg.SaveOnDisk {
+		return nil
+	}
+
+	// TODO: Clean all the files
+
+	return nil
+}
+
 func NewTSDBSeriesIter(ctx context.Context, user string, f sharding.ForSeries, bounds v1.FingerprintBounds) (iter.Iterator[model.Fingerprint], error) {
 	// TODO(salvacorts): Create a pool
 	series := make([]model.Fingerprint, 0, 100)
@@ -158,12 +208,14 @@ func NewTSDBSeriesIter(ctx context.Context, user string, f sharding.ForSeries, b
 }
 
 type TSDBStores struct {
+	cfg       TSDBStoreConfig
 	schemaCfg config.SchemaConfig
 	stores    []TSDBStore
 }
 
 func NewTSDBStores(
 	component string,
+	tsdbCfg TSDBStoreConfig,
 	schemaCfg config.SchemaConfig,
 	storeCfg baseStore.Config,
 	clientMetrics baseStore.ClientMetrics,
@@ -174,13 +226,23 @@ func NewTSDBStores(
 		stores:    make([]TSDBStore, len(schemaCfg.Configs)),
 	}
 
+	var diskClient storage.Client
+	if tsdbCfg.SaveOnDisk {
+		c, err := baseStore.NewObjectClient(types.StorageTypeFileSystem, component, storeCfg, clientMetrics)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to create object client")
+		}
+		diskClient = storage.NewIndexStorageClient(c, "index")
+	}
+
 	for i, cfg := range schemaCfg.Configs {
 		if cfg.IndexType == types.TSDBType {
 			c, err := baseStore.NewObjectClient(cfg.ObjectType, component, storeCfg, clientMetrics)
 			if err != nil {
 				return nil, errors.Wrap(err, "failed to create object client")
 			}
-			res.stores[i] = NewBloomTSDBStore(storage.NewIndexStorageClient(c, cfg.IndexTables.PathPrefix), logger)
+
+			res.stores[i] = NewBloomTSDBStore(tsdbCfg, storage.NewIndexStorageClient(c, cfg.IndexTables.PathPrefix), diskClient, logger)
 		}
 	}
 
@@ -245,4 +307,15 @@ func (s *TSDBStores) LoadTSDB(
 	}
 
 	return store.LoadTSDB(ctx, table, tenant, id)
+}
+
+func (s *TSDBStores) Cleanup() error {
+	var errs util.MultiError
+	for _, store := range s.stores {
+		if err := store.Cleanup(); err != nil {
+			errs = append(errs, err)
+		}
+	}
+
+	return errs.Err()
 }

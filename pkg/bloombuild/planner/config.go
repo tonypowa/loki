@@ -3,6 +3,7 @@ package planner
 import (
 	"flag"
 	"fmt"
+	"github.com/grafana/loki/v3/pkg/bloombuild/common"
 	"time"
 
 	"github.com/grafana/loki/v3/pkg/bloombuild/planner/strategies"
@@ -10,11 +11,12 @@ import (
 
 // Config configures the bloom-planner component.
 type Config struct {
-	PlanningInterval        time.Duration   `yaml:"planning_interval"`
-	MinTableOffset          int             `yaml:"min_table_offset"`
-	MaxTableOffset          int             `yaml:"max_table_offset"`
-	MaxQueuedTasksPerTenant int             `yaml:"max_queued_tasks_per_tenant"`
-	RetentionConfig         RetentionConfig `yaml:"retention"`
+	PlanningInterval        time.Duration          `yaml:"planning_interval"`
+	MinTableOffset          int                    `yaml:"min_table_offset"`
+	MaxTableOffset          int                    `yaml:"max_table_offset"`
+	MaxQueuedTasksPerTenant int                    `yaml:"max_queued_tasks_per_tenant"`
+	RetentionConfig         RetentionConfig        `yaml:"retention"`
+	TSDBStoreConfig         common.TSDBStoreConfig `yaml:"tsdb_store"`
 }
 
 // RegisterFlagsWithPrefix registers flags for the bloom-planner configuration.
