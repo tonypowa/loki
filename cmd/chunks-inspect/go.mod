@@ -4,7 +4,7 @@ go 1.23.1
 
 require (
 	github.com/golang/snappy v0.0.4
-	github.com/grafana/loki/pkg/logql/log v0.0.0-00010101000000-000000000000
+	github.com/grafana/loki/pkg/logql/log v0.0.0
 	github.com/grafana/loki/v3 v3.2.1
 	github.com/pkg/errors v0.9.1
 )
@@ -53,7 +53,7 @@ require (
 	github.com/grafana/loki/pkg/logql/log/pattern v0.0.0 // indirect
 	github.com/grafana/loki/pkg/logql/syntax v0.0.0 // indirect
 	github.com/grafana/loki/pkg/push v0.0.0-20240924133635-758364c7775f // indirect
-	github.com/grafana/loki/pkg/util/encoding v0.0.0-00010101000000-000000000000 // indirect
+	github.com/grafana/loki/pkg/util/encoding v0.0.0 // indirect
 	github.com/grafana/loki/pkg/util/regexp v0.0.0 // indirect
 	github.com/grafana/pyroscope-go/godeltaprof v0.1.8 // indirect
 	github.com/grafana/regexp v0.0.0-20240518133315-a468a5bfb3bc // indirect
