@@ -17,7 +17,7 @@ import (
 	"github.com/grafana/dskit/user"
 	"github.com/prometheus/prometheus/model/labels"
 
-	"github.com/grafana/loki/v3/pkg/logql/syntax"
+	"github.com/grafana/loki/pkg/logql/syntax"
 	"github.com/grafana/loki/v3/pkg/loki"
 	"github.com/grafana/loki/v3/pkg/storage"
 	"github.com/grafana/loki/v3/pkg/storage/chunk"
@@ -196,7 +196,7 @@ func main() {
 		i := 0
 		length := len(syncRanges)
 		for i < length {
-			//log.Printf("Dispatching sync range %v of %v\n", i+1, length)
+			// log.Printf("Dispatching sync range %v of %v\n", i+1, length)
 			syncChan <- syncRanges[i]
 			i++
 		}
@@ -316,7 +316,7 @@ func (m *chunkMover) moveChunks(ctx context.Context, threadID int, syncRangeCh <
 				return
 			}
 			for i, f := range fetchers {
-				//log.Printf("%v Processing Schema %v which contains %v chunks\n", threadID, i, len(schemaGroups[i]))
+				// log.Printf("%v Processing Schema %v which contains %v chunks\n", threadID, i, len(schemaGroups[i]))
 
 				// Slice up into batches
 				for j := 0; j < len(schemaGroups[i]); j += m.batch {
@@ -326,7 +326,7 @@ func (m *chunkMover) moveChunks(ctx context.Context, threadID int, syncRangeCh <
 					}
 
 					chunks := schemaGroups[i][j:k]
-					//log.Printf("%v Processing chunks %v-%v of %v\n", threadID, j, k, len(schemaGroups[i]))
+					// log.Printf("%v Processing chunks %v-%v of %v\n", threadID, j, k, len(schemaGroups[i]))
 
 					chks := make([]chunk.Chunk, 0, len(chunks))
 
@@ -402,7 +402,7 @@ func (m *chunkMover) moveChunks(ctx context.Context, threadID int, syncRangeCh <
 							break
 						}
 					}
-					//log.Println(threadID, "Batch sent successfully")
+					// log.Println(threadID, "Batch sent successfully")
 				}
 			}
 			log.Printf("%d Finished processing sync range %d of %d - Start: %v, End: %v, %v chunks, %s in %.1f seconds %s/second\n", threadID, sr.number, m.syncRanges, time.Unix(0, sr.from).UTC(), time.Unix(0, sr.to).UTC(), totalChunks, ByteCountDecimal(totalBytes), time.Since(start).Seconds(), ByteCountDecimal(uint64(float64(totalBytes)/time.Since(start).Seconds())))

@@ -11,12 +11,12 @@ import (
 
 	"github.com/gorilla/websocket"
 
+	logqllog "github.com/grafana/loki/pkg/logql/log"
 	"github.com/grafana/loki/v3/pkg/iter"
 	"github.com/grafana/loki/v3/pkg/logcli/volume"
 	"github.com/grafana/loki/v3/pkg/loghttp"
 	"github.com/grafana/loki/v3/pkg/logproto"
 	"github.com/grafana/loki/v3/pkg/logql"
-	logqllog "github.com/grafana/loki/v3/pkg/logql/log"
 	"github.com/grafana/loki/v3/pkg/util/log"
 	"github.com/grafana/loki/v3/pkg/util/marshal"
 	"github.com/grafana/loki/v3/pkg/util/validation"
@@ -267,7 +267,6 @@ func newFileIterator(
 	params logql.SelectLogParams,
 	pipeline logqllog.StreamPipeline,
 ) (iter.EntryIterator, error) {
-
 	lr := io.LimitReader(r, defaultMaxFileSize)
 	b, err := io.ReadAll(lr)
 	if err != nil {

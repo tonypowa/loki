@@ -6,9 +6,9 @@ import (
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
 
+	"github.com/grafana/loki/pkg/util/encoding"
 	"github.com/grafana/loki/v3/pkg/iter"
 	v2iter "github.com/grafana/loki/v3/pkg/iter/v2"
-	"github.com/grafana/loki/v3/pkg/util/encoding"
 
 	"github.com/grafana/loki/pkg/push"
 )
@@ -27,9 +27,11 @@ type BloomTokenizer struct {
 	cache        map[string]interface{}
 }
 
-const cacheSize = 150000
-const bloomTokenizerMetricsSubsystem = "bloom_tokenizer"
-const eightBits = 8
+const (
+	cacheSize                      = 150000
+	bloomTokenizerMetricsSubsystem = "bloom_tokenizer"
+	eightBits                      = 8
+)
 
 // NewBloomTokenizer returns a new instance of the Bloom Tokenizer.
 // Warning: the tokens returned use the same byte slice to reduce allocations. This has two consequences:

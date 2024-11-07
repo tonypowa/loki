@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/grafana/loki/v3/pkg/logql/syntax"
+	"github.com/grafana/loki/pkg/logql/syntax"
 )
 
 func Test_SplitRangeInterval(t *testing.T) {
@@ -165,7 +165,6 @@ func Test_RangeMapperSplitAlign(t *testing.T) {
 			require.Equal(t, removeWhiteSpace(tc.expected), removeWhiteSpace(mappedExpr.String()))
 			require.Equal(t, tc.expectedSplits, mapperStats.GetSplitQueries())
 			require.False(t, noop)
-
 		})
 	}
 }

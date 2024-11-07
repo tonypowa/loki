@@ -8,12 +8,11 @@ import (
 	"github.com/prometheus/prometheus/model/labels"
 	"github.com/prometheus/prometheus/promql/parser"
 
-	"github.com/grafana/loki/v3/pkg/logql/log"
-	"github.com/grafana/loki/v3/pkg/logql/syntax"
+	"github.com/grafana/loki/pkg/logql/log"
+	"github.com/grafana/loki/pkg/logql/syntax"
 )
 
-type logQLAnalyzer struct {
-}
+type logQLAnalyzer struct{}
 
 func (a logQLAnalyzer) analyze(query string, logs []string) (*Result, error) {
 	expr, err := syntax.ParseLogSelector(query, true)
@@ -55,7 +54,6 @@ func (a logQLAnalyzer) extractExpressionParts(expr syntax.LogSelectorExpr) (stri
 	default:
 		return "", nil, fmt.Errorf("unsupported type of expression")
 	}
-
 }
 
 func mapAllToLineResult(originLine string, analysisRecords []StageAnalysisRecord) LineResult {
@@ -86,8 +84,7 @@ func mapAllToLabelsResponse(labels labels.Labels) []Label {
 type PipelineAnalyzer interface {
 	AnalyzeLine(line string) []StageAnalysisRecord
 }
-type noopPipelineAnalyzer struct {
-}
+type noopPipelineAnalyzer struct{}
 
 func (n noopPipelineAnalyzer) AnalyzeLine(_ string) []StageAnalysisRecord {
 	return []StageAnalysisRecord{}
@@ -112,7 +109,8 @@ func (p streamPipelineAnalyzer) AnalyzeLine(line string) []StageAnalysisRecord {
 	stageRecorders := make([]log.Stage, 0, len(stages))
 	records := make([]StageAnalysisRecord, len(stages))
 	for i, stage := range stages {
-		stageRecorders = append(stageRecorders, StageAnalysisRecorder{origin: stage,
+		stageRecorders = append(stageRecorders, StageAnalysisRecorder{
+			origin:     stage,
 			records:    records,
 			stageIndex: i,
 		})
@@ -145,6 +143,7 @@ func (s StageAnalysisRecorder) Process(ts int64, line []byte, lbs *log.LabelsBui
 	}
 	return lineResult, ok
 }
+
 func (s StageAnalysisRecorder) RequiredLabelNames() []string {
 	return s.origin.RequiredLabelNames()
 }

@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/grafana/loki/v3/pkg/logql/syntax"
+	"github.com/grafana/loki/pkg/logql/syntax"
 	"github.com/grafana/loki/v3/pkg/util/server"
 )
 
@@ -40,7 +40,6 @@ func formatQueryHandler() http.HandlerFunc {
 		if err := json.NewEncoder(w).Encode(resp); err != nil {
 			server.WriteError(err, w)
 		}
-
 	}
 }
 

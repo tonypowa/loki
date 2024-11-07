@@ -14,7 +14,7 @@ import (
 	"github.com/gogo/googleapis/google/rpc"
 	"github.com/gogo/status"
 
-	"github.com/grafana/loki/v3/pkg/logql/syntax"
+	"github.com/grafana/loki/pkg/logql/syntax"
 	"github.com/grafana/loki/v3/pkg/logqlmodel"
 	storage_errors "github.com/grafana/loki/v3/pkg/storage/errors"
 	"github.com/grafana/loki/v3/pkg/util"

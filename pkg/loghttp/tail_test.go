@@ -8,8 +8,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/grafana/loki/pkg/logql/syntax"
 	"github.com/grafana/loki/v3/pkg/logproto"
-	"github.com/grafana/loki/v3/pkg/logql/syntax"
 	"github.com/grafana/loki/v3/pkg/querier/plan"
 )
 
@@ -24,26 +24,32 @@ func TestParseTailQuery(t *testing.T) {
 	}{
 		{"bad time", &http.Request{URL: mustParseURL(`?query={foo="bar"}&start=t`)}, nil, true},
 		{"bad limit", &http.Request{URL: mustParseURL(`?query={foo="bar"}&start=2016-06-10T21:42:24.760738998Z&limit=h`)}, nil, true},
-		{"bad delay",
+		{
+			"bad delay",
 			&http.Request{
 				URL: mustParseURL(`?query={foo="bar"}&time=2016-06-10T21:42:24.760738998Z&limit=100&delay_for=fw`),
-			}, nil, true},
-		{"too much delay",
+			}, nil, true,
+		},
+		{
+			"too much delay",
 			&http.Request{
 				URL: mustParseURL(`?query={foo="bar"}&time=2016-06-10T21:42:24.760738998Z&limit=100&delay_for=20`),
-			}, nil, true},
-		{"good",
+			}, nil, true,
+		},
+		{
+			"good",
 			&http.Request{
 				URL: mustParseURL(`?query={foo="bar"}&start=2017-06-10T21:42:24.760738998Z&limit=1000&delay_for=5`),
 			}, &logproto.TailRequest{
 				Query:    `{foo="bar"}`,
 				DelayFor: 5,
-				Start:    time.Date(2017, 06, 10, 21, 42, 24, 760738998, time.UTC),
+				Start:    time.Date(2017, 0o6, 10, 21, 42, 24, 760738998, time.UTC),
 				Limit:    1000,
 				Plan: &plan.QueryPlan{
 					AST: syntax.MustParseExpr(`{foo="bar"}`),
 				},
-			}, false},
+			}, false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

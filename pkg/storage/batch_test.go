@@ -13,11 +13,11 @@ import (
 	"github.com/prometheus/prometheus/promql"
 	"github.com/stretchr/testify/require"
 
+	"github.com/grafana/loki/pkg/logql/log"
 	"github.com/grafana/loki/v3/pkg/chunkenc"
 	"github.com/grafana/loki/v3/pkg/iter"
 	"github.com/grafana/loki/v3/pkg/logproto"
 	"github.com/grafana/loki/v3/pkg/logql"
-	"github.com/grafana/loki/v3/pkg/logql/log"
 	"github.com/grafana/loki/v3/pkg/logqlmodel/stats"
 	"github.com/grafana/loki/v3/pkg/storage/config"
 )
@@ -1522,7 +1522,6 @@ func TestPartitionOverlappingchunks(t *testing.T) {
 }
 
 func TestBuildHeapIterator(t *testing.T) {
-
 	periodConfig := config.PeriodConfig{
 		From:      config.DayTime{Time: 0},
 		Schema:    "v11",

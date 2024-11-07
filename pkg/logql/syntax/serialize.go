@@ -8,7 +8,7 @@ import (
 	jsoniter "github.com/json-iterator/go"
 	"github.com/prometheus/prometheus/model/labels"
 
-	"github.com/grafana/loki/v3/pkg/logql/log"
+	"github.com/grafana/loki/pkg/logql/log"
 )
 
 type JSONSerializer struct {
@@ -743,6 +743,7 @@ func decodeBinOp(iter *jsoniter.Iterator) (*BinOpExpr, error) {
 
 	return expr, err
 }
+
 func decodeBinOpOptions(iter *jsoniter.Iterator) *BinOpOptions {
 	opts := &BinOpOptions{}
 

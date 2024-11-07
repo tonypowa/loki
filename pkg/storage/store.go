@@ -9,7 +9,7 @@ import (
 	"github.com/grafana/loki/v3/pkg/storage/types"
 	"github.com/grafana/loki/v3/pkg/util/httpreq"
 
-	lokilog "github.com/grafana/loki/v3/pkg/logql/log"
+	lokilog "github.com/grafana/loki/pkg/logql/log"
 
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"

@@ -11,19 +11,19 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/grafana/loki/pkg/logql/syntax"
 	"github.com/grafana/loki/v3/pkg/loghttp"
 	"github.com/grafana/loki/v3/pkg/logproto"
-	"github.com/grafana/loki/v3/pkg/logql/syntax"
 	"github.com/grafana/loki/v3/pkg/querier/plan"
 	"github.com/grafana/loki/v3/pkg/querier/queryrange/queryrangebase"
 )
 
 func Test_RangeVectorSplitAlign(t *testing.T) {
 	var (
-		twelve34 = time.Date(1970, 1, 1, 12, 34, 0, 0, time.UTC) // 1970 12:34:00 UTC
-		twelve   = time.Date(1970, 1, 1, 12, 00, 0, 0, time.UTC) // 1970 12:00:00 UTC
-		eleven   = twelve.Add(-1 * time.Hour)                    // 1970 11:00:00 UTC
-		ten      = eleven.Add(-1 * time.Hour)                    // 1970 10:00:00 UTC
+		twelve34 = time.Date(1970, 1, 1, 12, 34, 0, 0, time.UTC)  // 1970 12:34:00 UTC
+		twelve   = time.Date(1970, 1, 1, 12, 0o0, 0, 0, time.UTC) // 1970 12:00:00 UTC
+		eleven   = twelve.Add(-1 * time.Hour)                     // 1970 11:00:00 UTC
+		ten      = eleven.Add(-1 * time.Hour)                     // 1970 10:00:00 UTC
 	)
 
 	for _, tc := range []struct {
@@ -286,7 +286,6 @@ func Test_RangeVectorSplitAlign(t *testing.T) {
 					assert.Equal(t, subq.Request.GetQuery(), req.GetQuery())
 					assert.Equal(t, subq.Request, req)
 					return subq.Response, nil
-
 				})).Do(ctx, tc.in)
 			require.NoError(t, err)
 			assert.Equal(t, tc.expected, resp.(*LokiPromResponse).Response)

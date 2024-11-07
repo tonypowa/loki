@@ -5,9 +5,9 @@ import (
 
 	"github.com/prometheus/prometheus/model/labels"
 
-	"github.com/grafana/loki/v3/pkg/logql/log"
-	"github.com/grafana/loki/v3/pkg/logql/syntax"
-	regexutil "github.com/grafana/loki/v3/pkg/util/regexp"
+	"github.com/grafana/loki/pkg/logql/log"
+	"github.com/grafana/loki/pkg/logql/syntax"
+	regexutil "github.com/grafana/loki/pkg/util/regexp"
 )
 
 // Simplifiable regexp expressions can quickly expand into very high

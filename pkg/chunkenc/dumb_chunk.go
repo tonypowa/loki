@@ -6,10 +6,10 @@ import (
 	"sort"
 	"time"
 
+	"github.com/grafana/loki/pkg/logql/log"
 	"github.com/grafana/loki/v3/pkg/compression"
 	"github.com/grafana/loki/v3/pkg/iter"
 	"github.com/grafana/loki/v3/pkg/logproto"
-	"github.com/grafana/loki/v3/pkg/logql/log"
 	"github.com/grafana/loki/v3/pkg/util/filter"
 )
 

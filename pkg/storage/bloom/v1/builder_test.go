@@ -10,9 +10,9 @@ import (
 	"github.com/prometheus/common/model"
 	"github.com/stretchr/testify/require"
 
+	"github.com/grafana/loki/pkg/util/encoding"
 	"github.com/grafana/loki/v3/pkg/compression"
 	iter "github.com/grafana/loki/v3/pkg/iter/v2"
-	"github.com/grafana/loki/v3/pkg/util/encoding"
 	"github.com/grafana/loki/v3/pkg/util/mempool"
 )
 
@@ -178,7 +178,6 @@ func TestBlockBuilder_RoundTrip(t *testing.T) {
 					}
 					require.False(t, querier.Next())
 				}
-
 			})
 		}
 

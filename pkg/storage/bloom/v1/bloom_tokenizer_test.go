@@ -11,12 +11,12 @@ import (
 	logger "github.com/go-kit/log"
 	"github.com/grafana/dskit/multierror"
 
+	"github.com/grafana/loki/pkg/logql/log"
 	"github.com/grafana/loki/v3/pkg/chunkenc"
 	"github.com/grafana/loki/v3/pkg/compression"
 	"github.com/grafana/loki/v3/pkg/iter"
 	v2 "github.com/grafana/loki/v3/pkg/iter/v2"
 	"github.com/grafana/loki/v3/pkg/logproto"
-	"github.com/grafana/loki/v3/pkg/logql/log"
 
 	"github.com/grafana/loki/pkg/push"
 
@@ -31,7 +31,7 @@ var metrics = NewMetrics(prometheus.DefaultRegisterer)
 
 func TestTokenizerPopulate(t *testing.T) {
 	t.Parallel()
-	var testLine = "this is a log line"
+	testLine := "this is a log line"
 	bt := NewBloomTokenizer(0, metrics, logger.NewNopLogger())
 
 	metadata := push.LabelsAdapter{
@@ -76,7 +76,7 @@ func TestTokenizerPopulate(t *testing.T) {
 }
 
 func TestBloomTokenizerPopulateWithoutPreexistingBloom(t *testing.T) {
-	var testLine = "this is a log line"
+	testLine := "this is a log line"
 	bt := NewBloomTokenizer(0, metrics, logger.NewNopLogger())
 
 	metadata := push.LabelsAdapter{
@@ -230,8 +230,10 @@ func BenchmarkPopulateSeriesWithBloom(b *testing.B) {
 		_, err = populateAndConsumeBloom(
 			bt,
 			v2.NewSliceIter([]*Bloom{&bloom}),
-			v2.NewSliceIter([]ChunkRefWithIter{{Ref: ChunkRef{},
-				Itr: itr}}),
+			v2.NewSliceIter([]ChunkRefWithIter{{
+				Ref: ChunkRef{},
+				Itr: itr,
+			}}),
 		)
 		require.NoError(b, err)
 	}

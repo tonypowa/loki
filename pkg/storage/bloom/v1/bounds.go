@@ -9,9 +9,9 @@ import (
 	"github.com/pkg/errors"
 	"github.com/prometheus/common/model"
 
+	"github.com/grafana/loki/pkg/util/encoding"
 	iter "github.com/grafana/loki/v3/pkg/iter/v2"
 	"github.com/grafana/loki/v3/pkg/logproto"
-	"github.com/grafana/loki/v3/pkg/util/encoding"
 )
 
 type BoundsCheck uint8
@@ -22,10 +22,8 @@ const (
 	After
 )
 
-var (
-	// FullBounds is the bounds that covers the entire fingerprint space
-	FullBounds = NewBounds(0, model.Fingerprint(math.MaxUint64))
-)
+// FullBounds is the bounds that covers the entire fingerprint space
+var FullBounds = NewBounds(0, model.Fingerprint(math.MaxUint64))
 
 type FingerprintBounds struct {
 	Min, Max model.Fingerprint

@@ -22,25 +22,23 @@ import (
 	"github.com/prometheus/prometheus/model/labels"
 	"github.com/stretchr/testify/require"
 
+	"github.com/grafana/loki/pkg/logql/log"
+	"github.com/grafana/loki/pkg/logql/syntax"
 	"github.com/grafana/loki/v3/pkg/chunkenc"
 	"github.com/grafana/loki/v3/pkg/distributor/writefailures"
 	"github.com/grafana/loki/v3/pkg/iter"
 	"github.com/grafana/loki/v3/pkg/logproto"
-	"github.com/grafana/loki/v3/pkg/logql/log"
-	"github.com/grafana/loki/v3/pkg/logql/syntax"
 	"github.com/grafana/loki/v3/pkg/util/flagext"
 	"github.com/grafana/loki/v3/pkg/validation"
 )
 
-var (
-	countExtractor = func() log.StreamSampleExtractor {
-		ex, err := log.NewLineSampleExtractor(log.CountExtractor, nil, nil, false, false)
-		if err != nil {
-			panic(err)
-		}
-		return ex.ForStream(labels.Labels{})
+var countExtractor = func() log.StreamSampleExtractor {
+	ex, err := log.NewLineSampleExtractor(log.CountExtractor, nil, nil, false, false)
+	if err != nil {
+		panic(err)
 	}
-)
+	return ex.ForStream(labels.Labels{})
+}
 
 func TestMaxReturnedStreamsErrors(t *testing.T) {
 	numLogs := 100
@@ -263,7 +261,6 @@ func TestPushRejectOldCounter(t *testing.T) {
 		{Timestamp: time.Unix(1, 0), Line: "test"},
 	}, recordPool.GetRecord(), 3, true, false, nil)
 	require.Nil(t, err)
-
 }
 
 func TestStreamIterator(t *testing.T) {
@@ -594,7 +591,6 @@ func TestReplayAppendIgnoresValidityWindow(t *testing.T) {
 	// Now pretend it's a replay. The same write should succeed.
 	_, err = s.Push(context.Background(), entries, nil, 2, true, false, nil)
 	require.Nil(t, err)
-
 }
 
 func iterEq(t *testing.T, exp []logproto.Entry, got iter.EntryIterator) {

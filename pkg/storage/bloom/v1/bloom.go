@@ -7,9 +7,9 @@ import (
 
 	"github.com/pkg/errors"
 
+	"github.com/grafana/loki/pkg/util/encoding"
 	"github.com/grafana/loki/v3/pkg/compression"
 	"github.com/grafana/loki/v3/pkg/storage/bloom/v1/filter"
-	"github.com/grafana/loki/v3/pkg/util/encoding"
 	"github.com/grafana/loki/v3/pkg/util/mempool"
 )
 
@@ -175,7 +175,6 @@ func (d *BloomPageDecoder) Relinquish(alloc mempool.Allocator) {
 	if cap(data) > 0 {
 		_ = alloc.Put(data)
 	}
-
 }
 
 func (d *BloomPageDecoder) Reset() {

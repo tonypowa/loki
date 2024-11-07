@@ -24,12 +24,12 @@ import (
 	"github.com/prometheus/prometheus/model/labels"
 	"google.golang.org/grpc/codes"
 
+	"github.com/grafana/loki/pkg/logql/syntax"
 	"github.com/grafana/loki/v3/pkg/distributor/clientpool"
 	"github.com/grafana/loki/v3/pkg/ingester/client"
 	"github.com/grafana/loki/v3/pkg/iter"
 	"github.com/grafana/loki/v3/pkg/logproto"
 	"github.com/grafana/loki/v3/pkg/logql"
-	"github.com/grafana/loki/v3/pkg/logql/syntax"
 	"github.com/grafana/loki/v3/pkg/logqlmodel/stats"
 	index_stats "github.com/grafana/loki/v3/pkg/storage/stores/index/stats"
 	util_log "github.com/grafana/loki/v3/pkg/util/log"
@@ -140,7 +140,6 @@ func (q *IngesterQuerier) forGivenIngesters(ctx context.Context, replicationSet 
 	}, func(responseFromIngesters) {
 		// Nothing to do
 	})
-
 	if err != nil {
 		return nil, err
 	}
@@ -347,7 +346,6 @@ func (q *IngesterQuerier) Stats(ctx context.Context, _ string, from, through mod
 			Matchers: syntax.MatchersString(matchers),
 		})
 	})
-
 	if err != nil {
 		if isUnimplementedCallError(err) {
 			// Handle communication with older ingesters gracefully
@@ -381,7 +379,6 @@ func (q *IngesterQuerier) Volume(ctx context.Context, _ string, from, through mo
 			AggregateBy:  aggregateBy,
 		})
 	})
-
 	if err != nil {
 		if isUnimplementedCallError(err) {
 			// Handle communication with older ingesters gracefully
@@ -403,7 +400,6 @@ func (q *IngesterQuerier) DetectedLabel(ctx context.Context, req *logproto.Detec
 	ingesterResponses, err := q.forAllIngesters(ctx, func(ctx context.Context, client logproto.QuerierClient) (interface{}, error) {
 		return client.GetDetectedLabels(ctx, req)
 	})
-
 	if err != nil {
 		level.Error(q.logger).Log("msg", "error getting detected labels", "err", err)
 		return nil, err

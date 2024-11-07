@@ -3,13 +3,11 @@ package deletion
 import (
 	"errors"
 
+	"github.com/grafana/loki/pkg/logql/syntax"
 	"github.com/grafana/loki/v3/pkg/compactor/deletionmode"
-	"github.com/grafana/loki/v3/pkg/logql/syntax"
 )
 
-var (
-	errInvalidQuery = errors.New("invalid query expression")
-)
+var errInvalidQuery = errors.New("invalid query expression")
 
 // parseDeletionQuery checks if the given logQL is valid for deletions
 func parseDeletionQuery(query string) (syntax.LogSelectorExpr, error) {

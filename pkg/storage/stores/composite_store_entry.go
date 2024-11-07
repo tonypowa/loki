@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/grafana/loki/v3/pkg/logql/syntax"
+	"github.com/grafana/loki/pkg/logql/syntax"
 
 	"github.com/grafana/loki/v3/pkg/logproto"
 
@@ -51,7 +51,8 @@ func (c *storeEntry) GetChunks(
 	storeChunksOverride *logproto.ChunkRefGroup,
 ) ([][]chunk.Chunk,
 	[]*fetcher.Fetcher,
-	error) {
+	error,
+) {
 	if ctx.Err() != nil {
 		return nil, nil, ctx.Err()
 	}

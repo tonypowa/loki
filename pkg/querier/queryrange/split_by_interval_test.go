@@ -15,9 +15,9 @@ import (
 	"github.com/stretchr/testify/require"
 	"gopkg.in/yaml.v2"
 
+	"github.com/grafana/loki/pkg/logql/syntax"
 	"github.com/grafana/loki/v3/pkg/loghttp"
 	"github.com/grafana/loki/v3/pkg/logproto"
-	"github.com/grafana/loki/v3/pkg/logql/syntax"
 	"github.com/grafana/loki/v3/pkg/logqlmodel/stats"
 	"github.com/grafana/loki/v3/pkg/querier/plan"
 	"github.com/grafana/loki/v3/pkg/querier/queryrange/queryrangebase"
@@ -1136,7 +1136,7 @@ func Test_splitMetricQuery(t *testing.T) {
 			},
 			expected: []queryrangebase.Request{
 				&LokiRequest{
-					StartTs: time.Date(2023, 1, 15, 7, 05, 30, 0, time.UTC), // start time is aligned down to step of 15s
+					StartTs: time.Date(2023, 1, 15, 7, 0o5, 30, 0, time.UTC), // start time is aligned down to step of 15s
 					EndTs:   time.Date(2023, 1, 15, 7, 29, 45, 0, time.UTC),
 					Step:    15 * seconds,
 					Query:   shortRange,
@@ -1660,7 +1660,8 @@ func Test_seriesvolume_splitByInterval_Do(t *testing.T) {
 						{Name: `{foo="bar"}`, Volume: 38},
 						{Name: `{bar="baz"}`, Volume: 28},
 					},
-					Limit: 2},
+					Limit: 2,
+				},
 				Headers: nil,
 			}, nil
 		})
@@ -1700,7 +1701,8 @@ func Test_seriesvolume_splitByInterval_Do(t *testing.T) {
 						{Name: `{foo="bar"}`, Volume: 38},
 						{Name: `{fizz="buzz"}`, Volume: 28},
 					},
-					Limit: 1},
+					Limit: 1,
+				},
 				Headers: nil,
 			}, nil
 		})
@@ -1740,7 +1742,8 @@ func Test_seriesvolume_splitByInterval_Do(t *testing.T) {
 						{Name: `{foo="bar"}`, Volume: 38},
 						{Name: `{bar="baz"}`, Volume: 28},
 					},
-					Limit: 2},
+					Limit: 2,
+				},
 				Headers: nil,
 			}, nil
 		})

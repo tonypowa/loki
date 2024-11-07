@@ -8,7 +8,7 @@ import (
 	tsdb_enc "github.com/prometheus/prometheus/tsdb/encoding"
 	"github.com/stretchr/testify/require"
 
-	"github.com/grafana/loki/v3/pkg/util/encoding"
+	"github.com/grafana/loki/pkg/util/encoding"
 )
 
 // Test all sort variants
@@ -453,7 +453,6 @@ func TestChunkEncodingRoundTrip(t *testing.T) {
 				})
 			}
 		}
-
 	}
 }
 
@@ -597,7 +596,6 @@ func TestSearchWithPageMarkers(t *testing.T) {
 			})
 		}
 	}
-
 }
 
 func TestDecoderChunkStats(t *testing.T) {
@@ -762,5 +760,4 @@ func BenchmarkReadChunks(b *testing.B) {
 			})
 		}
 	}
-
 }

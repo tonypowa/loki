@@ -16,10 +16,10 @@ import (
 	"github.com/prometheus/common/model"
 	"github.com/stretchr/testify/require"
 
+	"github.com/grafana/loki/pkg/logql/syntax"
 	"github.com/grafana/loki/v3/pkg/loghttp"
 	"github.com/grafana/loki/v3/pkg/logproto"
 	"github.com/grafana/loki/v3/pkg/logql"
-	"github.com/grafana/loki/v3/pkg/logql/syntax"
 	"github.com/grafana/loki/v3/pkg/logqlmodel/stats"
 	"github.com/grafana/loki/v3/pkg/querier/plan"
 	"github.com/grafana/loki/v3/pkg/querier/queryrange/queryrangebase"
@@ -334,7 +334,6 @@ func Test_astMapper_QuerySizeLimits(t *testing.T) {
 			}
 
 			require.Equal(t, tc.expectedStatsHandlerHits, statsCalled)
-
 		})
 	}
 }
@@ -882,5 +881,4 @@ func Test_ASTMapper_MaxLookBackPeriod(t *testing.T) {
 	ctx := user.InjectOrgID(context.Background(), "foo")
 	_, err := mware.Do(ctx, lokiReq)
 	require.NoError(t, err)
-
 }

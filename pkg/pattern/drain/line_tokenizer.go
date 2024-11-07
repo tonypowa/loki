@@ -9,7 +9,7 @@ import (
 	"github.com/buger/jsonparser"
 	gologfmt "github.com/go-logfmt/logfmt"
 
-	"github.com/grafana/loki/v3/pkg/logql/log/logfmt"
+	"github.com/grafana/loki/pkg/logql/log/logfmt"
 )
 
 type LineTokenizer interface {

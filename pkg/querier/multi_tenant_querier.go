@@ -15,11 +15,11 @@ import (
 
 	"github.com/grafana/dskit/tenant"
 
+	"github.com/grafana/loki/pkg/logql/syntax"
 	"github.com/grafana/loki/v3/pkg/iter"
 	"github.com/grafana/loki/v3/pkg/loghttp"
 	"github.com/grafana/loki/v3/pkg/logproto"
 	"github.com/grafana/loki/v3/pkg/logql"
-	"github.com/grafana/loki/v3/pkg/logql/syntax"
 	"github.com/grafana/loki/v3/pkg/storage/stores/index/stats"
 )
 
@@ -467,7 +467,6 @@ func NewTenantSampleIterator(iter iter.SampleIterator, id string) *TenantSampleI
 			cache:    map[string]labels.Labels{},
 		},
 	}
-
 }
 
 func (i *TenantSampleIterator) Labels() string {

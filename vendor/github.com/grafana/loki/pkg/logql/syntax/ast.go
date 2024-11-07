@@ -15,8 +15,8 @@ import (
 
 	"github.com/grafana/regexp/syntax"
 
-	"github.com/grafana/loki/v3/pkg/logql/log"
-	regexputil "github.com/grafana/loki/v3/pkg/util/regexp"
+	"github.com/grafana/loki/pkg/logql/log"
+	regexputil "github.com/grafana/loki/pkg/util/regexp"
 )
 
 // Expr is the root expression which can be a SampleExpr or LogSelectorExpr

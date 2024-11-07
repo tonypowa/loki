@@ -6,11 +6,11 @@ require (
 	github.com/Masterminds/sprig/v3 v3.3.0
 	github.com/dustin/go-humanize v1.0.1
 	github.com/grafana/jsonparser v0.0.0-20241004153430-023329977675
-	github.com/grafana/loki/v3/pkg/logql/log/jsonexpr v0.0.0
-	github.com/grafana/loki/v3/pkg/logql/log/logfmt v0.0.0
-	github.com/grafana/loki/v3/pkg/logql/log/pattern v0.0.0
-	github.com/grafana/loki/v3/pkg/logql/syntax v0.0.0
-	github.com/grafana/loki/v3/pkg/util/regexp v0.0.0
+	github.com/grafana/loki/pkg/logql/log/jsonexpr v0.0.0
+	github.com/grafana/loki/pkg/logql/log/logfmt v0.0.0
+	github.com/grafana/loki/pkg/logql/log/pattern v0.0.0
+	github.com/grafana/loki/pkg/logql/syntax v0.0.0
+	github.com/grafana/loki/pkg/util/regexp v0.0.0
 	github.com/grafana/regexp v0.0.0-20240518133315-a468a5bfb3bc
 	github.com/json-iterator/go v1.1.12
 	github.com/pkg/errors v0.9.1
@@ -38,7 +38,7 @@ require (
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/google/uuid v1.6.0 // indirect
-	github.com/grafana/loki/v3/pkg/util/encoding v0.0.0-00010101000000-000000000000 // indirect
+	github.com/grafana/loki/pkg/util/encoding v0.0.0-00010101000000-000000000000 // indirect
 	github.com/huandu/xstrings v1.5.0 // indirect
 	github.com/klauspost/compress v1.17.11 // indirect
 	github.com/mitchellh/copystructure v1.2.0 // indirect
@@ -72,12 +72,12 @@ require (
 )
 
 replace (
-	github.com/grafana/loki/v3/pkg/logql/log => ./
-	github.com/grafana/loki/v3/pkg/logql/log/jsonexpr => ./jsonexpr
-	github.com/grafana/loki/v3/pkg/logql/log/logfmt => ./logfmt
-	github.com/grafana/loki/v3/pkg/logql/log/pattern => ./pattern
-	github.com/grafana/loki/v3/pkg/logql/syntax => ../../logql/syntax
-	github.com/grafana/loki/v3/pkg/util/encoding => ../../util/encoding
-	github.com/grafana/loki/v3/pkg/util/regexp => ../../util/regexp
+	github.com/grafana/loki/pkg/logql/log => ./
+	github.com/grafana/loki/pkg/logql/log/jsonexpr => ./jsonexpr
+	github.com/grafana/loki/pkg/logql/log/logfmt => ./logfmt
+	github.com/grafana/loki/pkg/logql/log/pattern => ./pattern
+	github.com/grafana/loki/pkg/logql/syntax => ../../logql/syntax
+	github.com/grafana/loki/pkg/util/encoding => ../../util/encoding
+	github.com/grafana/loki/pkg/util/regexp => ../../util/regexp
 	github.com/prometheus/prometheus => github.com/prometheus/prometheus v0.53.2-0.20240726125539-d4f098ae80fb
 )

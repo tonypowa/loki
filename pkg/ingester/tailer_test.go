@@ -12,8 +12,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/grafana/loki/pkg/logql/syntax"
 	"github.com/grafana/loki/v3/pkg/logproto"
-	"github.com/grafana/loki/v3/pkg/logql/syntax"
 )
 
 func TestTailer_RoundTrip(t *testing.T) {
@@ -161,7 +161,6 @@ func (f *fakeTailServer) Send(response *logproto.TailResponse) error {
 	defer f.responsesMu.Unlock()
 	f.responses = append(f.responses, *response)
 	return nil
-
 }
 
 func (f *fakeTailServer) Context() context.Context { return context.Background() }

@@ -9,10 +9,10 @@ import (
 	"github.com/grafana/dskit/multierror"
 	"golang.org/x/exp/slices"
 
+	logql_log "github.com/grafana/loki/pkg/logql/log"
 	"github.com/grafana/loki/v3/pkg/chunkenc"
 	iter "github.com/grafana/loki/v3/pkg/iter/v2"
 	"github.com/grafana/loki/v3/pkg/logproto"
-	logql_log "github.com/grafana/loki/v3/pkg/logql/log"
 	v1 "github.com/grafana/loki/v3/pkg/storage/bloom/v1"
 	"github.com/grafana/loki/v3/pkg/storage/chunk"
 	"github.com/grafana/loki/v3/pkg/storage/stores/shipper/bloomshipper"
@@ -61,7 +61,6 @@ func newBatchedLoader[A, B, C any](
 }
 
 func (b *batchedLoader[A, B, C]) Next() bool {
-
 	// iterate work until we have non-zero length batch
 	for len(b.batch) == 0 {
 
@@ -124,7 +123,6 @@ func newBatchedChunkLoader(
 	metrics *Metrics,
 	batchSize int,
 ) *batchedLoader[chunk.Chunk, chunk.Chunk, v1.ChunkRefWithIter] {
-
 	mapper := func(c chunk.Chunk) (v1.ChunkRefWithIter, error) {
 		chk := c.Data.(*chunkenc.Facade).LokiChunk()
 		metrics.chunkSize.Observe(float64(chk.UncompressedSize()))
@@ -135,7 +133,6 @@ func newBatchedChunkLoader(
 			logproto.FORWARD,
 			logql_log.NewNoopPipeline().ForStream(nil),
 		)
-
 		if err != nil {
 			return v1.ChunkRefWithIter{}, err
 		}
@@ -158,7 +155,6 @@ func newBatchedBlockLoader(
 	blocks []bloomshipper.BlockRef,
 	batchSize int,
 ) *batchedLoader[bloomshipper.BlockRef, *bloomshipper.CloseableBlockQuerier, *bloomshipper.CloseableBlockQuerier] {
-
 	fetchers := []Fetcher[bloomshipper.BlockRef, *bloomshipper.CloseableBlockQuerier]{fetcher}
 	inputs := [][]bloomshipper.BlockRef{blocks}
 	mapper := func(a *bloomshipper.CloseableBlockQuerier) (*bloomshipper.CloseableBlockQuerier, error) {
@@ -169,13 +165,14 @@ func newBatchedBlockLoader(
 }
 
 // compiler checks
-var _ iter.Iterator[*v1.SeriesWithBlooms] = &blockLoadingIter{}
-var _ iter.CloseIterator[*v1.SeriesWithBlooms] = &blockLoadingIter{}
-var _ iter.ResetIterator[*v1.SeriesWithBlooms] = &blockLoadingIter{}
+var (
+	_ iter.Iterator[*v1.SeriesWithBlooms]      = &blockLoadingIter{}
+	_ iter.CloseIterator[*v1.SeriesWithBlooms] = &blockLoadingIter{}
+	_ iter.ResetIterator[*v1.SeriesWithBlooms] = &blockLoadingIter{}
+)
 
 // TODO(chaudum): testware
 func newBlockLoadingIter(ctx context.Context, blocks []bloomshipper.BlockRef, fetcher FetchFunc[bloomshipper.BlockRef, *bloomshipper.CloseableBlockQuerier], batchSize int) *blockLoadingIter {
-
 	return &blockLoadingIter{
 		ctx:       ctx,
 		fetcher:   fetcher,

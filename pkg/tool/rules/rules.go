@@ -8,7 +8,7 @@ import (
 	"github.com/prometheus/prometheus/promql/parser"
 	log "github.com/sirupsen/logrus"
 
-	logql "github.com/grafana/loki/v3/pkg/logql/syntax"
+	logql "github.com/grafana/loki/pkg/logql/syntax"
 
 	"github.com/grafana/loki/v3/pkg/tool/rules/rwrulefmt"
 )

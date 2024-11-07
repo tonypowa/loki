@@ -19,9 +19,9 @@ import (
 	"github.com/prometheus/common/model"
 	"github.com/prometheus/prometheus/model/labels"
 
+	"github.com/grafana/loki/pkg/logql/syntax"
 	iter "github.com/grafana/loki/v3/pkg/iter/v2"
 	"github.com/grafana/loki/v3/pkg/logproto"
-	"github.com/grafana/loki/v3/pkg/logql/syntax"
 	"github.com/grafana/loki/v3/pkg/querier/plan"
 	v1 "github.com/grafana/loki/v3/pkg/storage/bloom/v1"
 	"github.com/grafana/loki/v3/pkg/storage/chunk"
@@ -422,7 +422,6 @@ func (g *Gateway) GetShards(request *logproto.ShardsRequest, server logproto.Ind
 			request.TargetBytesPerShard,
 			p,
 		)
-
 		if err != nil {
 			return err
 		}
@@ -514,7 +513,6 @@ func (g *Gateway) boundedShards(
 				Stats:  &logproto.IndexStatsResponse{},
 			},
 		}
-
 	} else {
 		shards, chunkGrps, err := accumulateChunksToShards(ctx, instanceID, forSeries, req, p, filtered)
 		if err != nil {

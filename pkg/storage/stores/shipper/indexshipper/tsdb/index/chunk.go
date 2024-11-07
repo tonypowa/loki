@@ -5,8 +5,8 @@ import (
 
 	"github.com/prometheus/common/model"
 
+	"github.com/grafana/loki/pkg/util/encoding"
 	"github.com/grafana/loki/v3/pkg/util"
-	"github.com/grafana/loki/v3/pkg/util/encoding"
 )
 
 // Meta holds information about a chunk of data.
@@ -102,7 +102,6 @@ func (c ChunkMetas) Finalize() ChunkMetas {
 	// release self to pool; res will be returned instead
 	ChunkMetasPool.Put(c)
 	return res
-
 }
 
 // Add adds ChunkMeta at the right place in order. It assumes existing ChunkMetas have already been sorted by using Finalize.

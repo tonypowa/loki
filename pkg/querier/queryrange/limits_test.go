@@ -17,8 +17,8 @@ import (
 	"go.uber.org/atomic"
 	"gopkg.in/yaml.v2"
 
+	"github.com/grafana/loki/pkg/logql/syntax"
 	"github.com/grafana/loki/v3/pkg/logproto"
-	"github.com/grafana/loki/v3/pkg/logql/syntax"
 	"github.com/grafana/loki/v3/pkg/logqlmodel"
 	"github.com/grafana/loki/v3/pkg/querier/plan"
 	base "github.com/grafana/loki/v3/pkg/querier/queryrange/queryrangebase"
@@ -65,9 +65,7 @@ func TestMetricQueryCacheKey(t *testing.T) {
 		ingesterQueryWindow = defaultSplit * 3
 	)
 
-	var (
-		step = (15 * time.Second).Milliseconds()
-	)
+	step := (15 * time.Second).Milliseconds()
 
 	l := fakeLimits{
 		splitDuration:         map[string]time.Duration{defaultTenant: defaultSplit, alternateTenant: defaultSplit},
@@ -497,7 +495,6 @@ func Test_WeightedParallelism(t *testing.T) {
 			})
 		}
 	}
-
 }
 
 func Test_WeightedParallelism_DivideByZeroError(t *testing.T) {
@@ -713,7 +710,6 @@ func Test_MaxQuerySize(t *testing.T) {
 			require.Equal(t, tc.expectedQuerierStatsHits, *querierStatsHits)
 		})
 	}
-
 }
 
 func Test_MaxQuerySize_MaxLookBackPeriod(t *testing.T) {
@@ -772,7 +768,6 @@ func Test_MaxQuerySize_MaxLookBackPeriod(t *testing.T) {
 }
 
 func TestAcquireWithTiming(t *testing.T) {
-
 	ctx := context.Background()
 	sem := NewSemaphoreWithTiming(2)
 

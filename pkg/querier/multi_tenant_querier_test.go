@@ -15,10 +15,10 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
+	"github.com/grafana/loki/pkg/logql/syntax"
 	"github.com/grafana/loki/v3/pkg/iter"
 	"github.com/grafana/loki/v3/pkg/logproto"
 	"github.com/grafana/loki/v3/pkg/logql"
-	"github.com/grafana/loki/v3/pkg/logql/syntax"
 	"github.com/grafana/loki/v3/pkg/querier/plan"
 )
 
@@ -478,9 +478,10 @@ func mockLabelValueRequest() *logproto.VolumeRequest {
 }
 
 func mockLabelValueResponse() *logproto.VolumeResponse {
-	return &logproto.VolumeResponse{Volumes: []logproto.Volume{
-		{Name: `{foo="bar"}`, Volume: 38},
-	},
+	return &logproto.VolumeResponse{
+		Volumes: []logproto.Volume{
+			{Name: `{foo="bar"}`, Volume: 38},
+		},
 		Limit: 10,
 	}
 }

@@ -13,10 +13,10 @@ import (
 	"github.com/prometheus/prometheus/promql"
 	"github.com/stretchr/testify/require"
 
+	"github.com/grafana/loki/pkg/logql/syntax"
 	"github.com/grafana/loki/v3/pkg/iter"
 	"github.com/grafana/loki/v3/pkg/logproto"
 	"github.com/grafana/loki/v3/pkg/logql/sketch"
-	"github.com/grafana/loki/v3/pkg/logql/syntax"
 	"github.com/grafana/loki/v3/pkg/logql/vector"
 )
 
@@ -67,7 +67,6 @@ func newPoint(t time.Time, v float64) promql.FPoint {
 }
 
 func Benchmark_RangeVectorIteratorCompare(b *testing.B) {
-
 	// no overlap test case.
 	buildStreamingIt := func() (RangeVectorIterator, error) {
 		tt := struct {
@@ -183,7 +182,6 @@ func Benchmark_RangeVectorIteratorCompare(b *testing.B) {
 			}
 		}
 	})
-
 }
 
 func Benchmark_RangeVectorIterator(b *testing.B) {
@@ -214,7 +212,6 @@ func Benchmark_RangeVectorIterator(b *testing.B) {
 			i++
 		}
 	}
-
 }
 
 func Test_RangeVectorIterator_InstantQuery(t *testing.T) {

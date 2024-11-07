@@ -7,7 +7,7 @@ import (
 	"github.com/prometheus/prometheus/model/labels"
 	"github.com/stretchr/testify/require"
 
-	"github.com/grafana/loki/v3/pkg/logql/log"
+	"github.com/grafana/loki/pkg/logql/log"
 )
 
 func TestClone(t *testing.T) {
@@ -68,7 +68,6 @@ func TestClone(t *testing.T) {
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-
 			expr, err := ParseExpr(test.query)
 			require.NoError(t, err)
 

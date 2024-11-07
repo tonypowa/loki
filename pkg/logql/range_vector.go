@@ -11,8 +11,8 @@ import (
 	"github.com/prometheus/prometheus/promql"
 	promql_parser "github.com/prometheus/prometheus/promql/parser"
 
+	"github.com/grafana/loki/pkg/logql/syntax"
 	"github.com/grafana/loki/v3/pkg/iter"
-	"github.com/grafana/loki/v3/pkg/logql/syntax"
 	"github.com/grafana/loki/v3/pkg/logql/vector"
 )
 
@@ -42,7 +42,8 @@ type RangeVectorIterator interface {
 func newRangeVectorIterator(
 	it iter.PeekingSampleIterator,
 	expr *syntax.RangeAggregationExpr,
-	selRange, step, start, end, offset int64) (RangeVectorIterator, error) {
+	selRange, step, start, end, offset int64,
+) (RangeVectorIterator, error) {
 	// forces at least one step.
 	if step == 0 {
 		step = 1
@@ -88,8 +89,7 @@ func newRangeVectorIterator(
 	}, nil
 }
 
-//batch
-
+// batch
 type batchRangeVectorIterator struct {
 	iter                                 iter.PeekingSampleIterator
 	selRange, step, end, current, offset int64
@@ -186,6 +186,7 @@ func (r *batchRangeVectorIterator) load(start, end int64) {
 		_ = r.iter.Next()
 	}
 }
+
 func (r *batchRangeVectorIterator) At() (int64, StepResult) {
 	if r.at == nil {
 		r.at = make([]promql.Sample, 0, len(r.window))
@@ -808,7 +809,6 @@ type QuantileOverTime struct {
 
 func (a *QuantileOverTime) agg(sample promql.FPoint) {
 	a.values = append(a.values, promql.Sample{F: sample.F})
-
 }
 
 func (a *QuantileOverTime) at() float64 {
@@ -839,15 +839,16 @@ type LastOverTime struct {
 func (a *LastOverTime) agg(sample promql.FPoint) {
 	a.v = sample.F
 }
+
 func (a *LastOverTime) at() float64 {
 	return a.v
 }
 
-type OneOverTime struct {
-}
+type OneOverTime struct{}
 
 func (a *OneOverTime) agg(_ promql.FPoint) {
 }
+
 func (a *OneOverTime) at() float64 {
 	return 1.0
 }

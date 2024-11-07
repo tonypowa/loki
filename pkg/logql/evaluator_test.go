@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/grafana/loki/v3/pkg/logql/syntax"
+	"github.com/grafana/loki/pkg/logql/syntax"
 )
 
 func TestDefaultEvaluator_DivideByZero(t *testing.T) {
@@ -42,6 +42,7 @@ func TestDefaultEvaluator_DivideByZero(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, true, math.IsNaN(binOp.F))
 }
+
 func TestDefaultEvaluator_Sortable(t *testing.T) {
 	logqlSort := `sort(rate(({app=~"foo|bar"} |~".+bar")[1m])) `
 	sortable, err := Sortable(LiteralParams{queryString: logqlSort, queryExpr: syntax.MustParseExpr(logqlSort)})
@@ -56,8 +57,8 @@ func TestDefaultEvaluator_Sortable(t *testing.T) {
 		t.Fatal(err)
 	}
 	require.Equal(t, false, sortableSum)
-
 }
+
 func TestEvaluator_mergeBinOpComparisons(t *testing.T) {
 	for _, tc := range []struct {
 		desc     string
@@ -259,7 +260,6 @@ func TestEvaluator_mergeBinOpComparisons(t *testing.T) {
 }
 
 func TestEmptyNestedEvaluator(t *testing.T) {
-
 	for _, tc := range []struct {
 		desc string
 		ev   StepEvaluator
@@ -282,7 +282,6 @@ func TestEmptyNestedEvaluator(t *testing.T) {
 			require.False(t, ok)
 		})
 	}
-
 }
 
 func TestLiteralStepEvaluator(t *testing.T) {
@@ -366,7 +365,6 @@ func (*returnVectorEvaluator) Error() error {
 }
 
 func (*returnVectorEvaluator) Explain(Node) {
-
 }
 
 func newReturnVectorEvaluator(vec []float64) *returnVectorEvaluator {

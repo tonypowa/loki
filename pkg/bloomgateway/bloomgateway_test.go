@@ -18,8 +18,8 @@ import (
 	"github.com/prometheus/prometheus/model/labels"
 	"github.com/stretchr/testify/require"
 
+	"github.com/grafana/loki/pkg/logql/syntax"
 	"github.com/grafana/loki/v3/pkg/logproto"
-	"github.com/grafana/loki/v3/pkg/logql/syntax"
 	"github.com/grafana/loki/v3/pkg/querier/plan"
 	"github.com/grafana/loki/v3/pkg/storage"
 	v1 "github.com/grafana/loki/v3/pkg/storage/bloom/v1"
@@ -452,7 +452,6 @@ func TestBloomGateway_FilterChunkRefs(t *testing.T) {
 			}
 			require.Equal(t, expectedResponse, res)
 		})
-
 	})
 }
 
@@ -672,7 +671,6 @@ func TestFilterChunkRefs(t *testing.T) {
 			require.Equal(t, tc.expected.Refs, res)
 		})
 	}
-
 }
 
 func BenchmarkFilterChunkRefs(b *testing.B) {
@@ -743,5 +741,4 @@ func BenchmarkFilterChunkRefs(b *testing.B) {
 			}
 		})
 	}
-
 }

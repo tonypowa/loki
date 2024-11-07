@@ -3,19 +3,19 @@ module github.com/grafana/loki/pkg/logql/syntax
 go 1.23.1
 
 replace (
-	github.com/grafana/loki/v3/pkg/logql/log => ../log
-	github.com/grafana/loki/v3/pkg/logql/log/jsonexpr => ../log/jsonexpr
-	github.com/grafana/loki/v3/pkg/logql/log/logfmt => ../log/logfmt
-	github.com/grafana/loki/v3/pkg/logql/log/pattern => ../log/pattern
-	github.com/grafana/loki/v3/pkg/util/encoding => ../../util/encoding
-	github.com/grafana/loki/v3/pkg/util/regexp => ../../util/regexp
+	github.com/grafana/loki/pkg/logql/log => ../log
+	github.com/grafana/loki/pkg/logql/log/jsonexpr => ../log/jsonexpr
+	github.com/grafana/loki/pkg/logql/log/logfmt => ../log/logfmt
+	github.com/grafana/loki/pkg/logql/log/pattern => ../log/pattern
+	github.com/grafana/loki/pkg/util/encoding => ../../util/encoding
+	github.com/grafana/loki/pkg/util/regexp => ../../util/regexp
 )
 
 require (
 	github.com/dustin/go-humanize v1.0.1
-	github.com/grafana/loki/v3/pkg/logql/log v0.0.0-00010101000000-000000000000
-	github.com/grafana/loki/v3/pkg/util/encoding v0.0.0-00010101000000-000000000000
-	github.com/grafana/loki/v3/pkg/util/regexp v0.0.0
+	github.com/grafana/loki/pkg/logql/log v0.0.0
+	github.com/grafana/loki/pkg/util/encoding v0.0.0
+	github.com/grafana/loki/pkg/util/regexp v0.0.0
 	github.com/grafana/regexp v0.0.0-20240518133315-a468a5bfb3bc
 	github.com/json-iterator/go v1.1.12
 	github.com/pkg/errors v0.9.1
@@ -42,9 +42,9 @@ require (
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/grafana/jsonparser v0.0.0-20241004153430-023329977675 // indirect
-	github.com/grafana/loki/v3/pkg/logql/log/jsonexpr v0.0.0 // indirect
-	github.com/grafana/loki/v3/pkg/logql/log/logfmt v0.0.0 // indirect
-	github.com/grafana/loki/v3/pkg/logql/log/pattern v0.0.0 // indirect
+	github.com/grafana/loki/pkg/logql/log/jsonexpr v0.0.0 // indirect
+	github.com/grafana/loki/pkg/logql/log/logfmt v0.0.0 // indirect
+	github.com/grafana/loki/pkg/logql/log/pattern v0.0.0 // indirect
 	github.com/huandu/xstrings v1.5.0 // indirect
 	github.com/mitchellh/copystructure v1.2.0 // indirect
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect

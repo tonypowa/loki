@@ -14,8 +14,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/grafana/loki/pkg/logql/syntax"
 	"github.com/grafana/loki/v3/pkg/logproto"
-	"github.com/grafana/loki/v3/pkg/logql/syntax"
 	"github.com/grafana/loki/v3/pkg/storage/stores/shipper/indexshipper/tsdb/index"
 )
 
@@ -294,7 +294,7 @@ func TestApproxTopkSketches(t *testing.T) {
 		shardedQuery  string
 		regularQuery  string
 		realtiveError float64
-		//cardinalityEstimate int
+		// cardinalityEstimate int
 	}{
 		// Note:our data generation results in less spread between topk things for 10k streams than for 100k streams
 		// if we have 1k streams, we can get much more accurate results for topk 10 than topk 100
@@ -304,7 +304,7 @@ func TestApproxTopkSketches(t *testing.T) {
 			shardedQuery:  `approx_topk(3, sum by (a) (sum_over_time ({a=~".+"} | logfmt | unwrap value [1s])))`,
 			regularQuery:  `topk(3, sum by (a) (sum_over_time ({a=~".+"} | logfmt | unwrap value [1s])))`,
 			realtiveError: 0.0012,
-			//cardinalityEstimate: 3,
+			// cardinalityEstimate: 3,
 		},
 		{
 			labelShards:   10,

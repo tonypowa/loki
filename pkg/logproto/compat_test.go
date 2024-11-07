@@ -16,7 +16,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/grafana/loki/v3/pkg/logql/syntax"
+	"github.com/grafana/loki/pkg/logql/syntax"
 	"github.com/grafana/loki/v3/pkg/querier/plan"
 )
 
@@ -360,7 +360,6 @@ func TestIndexStatsRequestSpanLogging(t *testing.T) {
 			}
 			if field.Key == "end" {
 				require.Equal(t, timestamp.Time(end.UnixMilli()).String(), field.ValueString)
-
 			}
 		}
 	}
@@ -384,7 +383,6 @@ func TestVolumeRequest(t *testing.T) {
 			}
 			if field.Key == "end" {
 				require.Equal(t, timestamp.Time(end.UnixMilli()).String(), field.ValueString)
-
 			}
 		}
 	}

@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"golang.org/x/exp/slices"
 
-	"github.com/grafana/loki/v3/pkg/logql/log/pattern"
+	"github.com/grafana/loki/pkg/logql/log/pattern"
 )
 
 const (

@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	logql "github.com/grafana/loki/v3/pkg/logql/log"
+	logql "github.com/grafana/loki/pkg/logql/log"
 )
 
 const format = "2006-01-02 15:04:05.000000 MST"
@@ -112,7 +112,7 @@ func printFile(filename string, blockDetails, printLines, storeBlocks bool) {
 }
 
 func writeBlockToFile(data []byte, blockIndex int, filename string) {
-	err := os.WriteFile(filename, data, 0644)
+	err := os.WriteFile(filename, data, 0o644)
 	if err != nil {
 		log.Println("Failed to store block", blockIndex, "to file", filename, "due to error:", err)
 	} else {

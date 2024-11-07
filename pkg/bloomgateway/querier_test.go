@@ -14,8 +14,8 @@ import (
 	"github.com/prometheus/prometheus/model/labels"
 	"github.com/stretchr/testify/require"
 
+	"github.com/grafana/loki/pkg/logql/syntax"
 	"github.com/grafana/loki/v3/pkg/logproto"
-	"github.com/grafana/loki/v3/pkg/logql/syntax"
 	"github.com/grafana/loki/v3/pkg/querier/plan"
 	v1 "github.com/grafana/loki/v3/pkg/storage/bloom/v1"
 	"github.com/grafana/loki/v3/pkg/storage/stores/shipper/bloomshipper"
@@ -141,7 +141,6 @@ func TestBloomQuerier(t *testing.T) {
 		require.Equal(t, chunkRefs, res)
 		require.Equal(t, 2, c.callCount)
 	})
-
 }
 
 func TestGroupChunkRefs(t *testing.T) {

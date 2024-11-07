@@ -22,11 +22,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/grafana/loki/pkg/logql/log"
 	"github.com/grafana/loki/v3/pkg/chunkenc"
 	"github.com/grafana/loki/v3/pkg/compression"
 	ingesterclient "github.com/grafana/loki/v3/pkg/ingester/client"
 	"github.com/grafana/loki/v3/pkg/logproto"
-	"github.com/grafana/loki/v3/pkg/logql/log"
 	"github.com/grafana/loki/v3/pkg/storage/chunk"
 	"github.com/grafana/loki/v3/pkg/util/filter"
 	util_log "github.com/grafana/loki/v3/pkg/util/log"
@@ -230,7 +230,6 @@ func Test_Sweeper_deleteChunk(t *testing.T) {
 			}
 		})
 	}
-
 }
 
 type noopWriter struct {
@@ -1047,7 +1046,7 @@ func TestMigrateMarkers(t *testing.T) {
 	t.Run("migrate markers dir", func(t *testing.T) {
 		workDir := t.TempDir()
 		dst := path.Join(workDir, "store-1_2023-10-19")
-		require.NoError(t, os.Mkdir(path.Join(workDir, MarkersFolder), 0755))
+		require.NoError(t, os.Mkdir(path.Join(workDir, MarkersFolder), 0o755))
 
 		markers := []string{"foo", "bar", "buzz"}
 		for _, marker := range markers {

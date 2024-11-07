@@ -16,7 +16,7 @@ import (
 	"github.com/grafana/dskit/tenant"
 	"github.com/grafana/dskit/user"
 
-	"github.com/grafana/loki/v3/pkg/logql/log"
+	"github.com/grafana/loki/pkg/logql/log"
 
 	"github.com/grafana/dskit/backoff"
 	"github.com/grafana/dskit/flagext"
@@ -24,10 +24,10 @@ import (
 	"github.com/prometheus/prometheus/model/labels"
 	"github.com/stretchr/testify/require"
 
+	"github.com/grafana/loki/pkg/logql/syntax"
 	"github.com/grafana/loki/v3/pkg/distributor/shardstreams"
 	"github.com/grafana/loki/v3/pkg/logproto"
 	"github.com/grafana/loki/v3/pkg/logql"
-	"github.com/grafana/loki/v3/pkg/logql/syntax"
 	"github.com/grafana/loki/v3/pkg/querier/astmapper"
 	"github.com/grafana/loki/v3/pkg/querier/plan"
 	loki_runtime "github.com/grafana/loki/v3/pkg/runtime"
@@ -1177,7 +1177,7 @@ func TestInstance_Volume(t *testing.T) {
 
 			volumes, err := instance.GetVolume(context.Background(), &logproto.VolumeRequest{
 				From:        0,
-				Through:     1.1 * 1e3, //milliseconds
+				Through:     1.1 * 1e3, // milliseconds
 				Matchers:    "{}",
 				Limit:       5,
 				AggregateBy: seriesvolume.Series,
@@ -1196,7 +1196,7 @@ func TestInstance_Volume(t *testing.T) {
 			instance := prepareInstance(t)
 			volumes, err := instance.GetVolume(context.Background(), &logproto.VolumeRequest{
 				From:        0,
-				Through:     1.1 * 1e3, //milliseconds
+				Through:     1.1 * 1e3, // milliseconds
 				Matchers:    `{log_stream="dispatcher"}`,
 				Limit:       5,
 				AggregateBy: seriesvolume.Series,
@@ -1212,7 +1212,7 @@ func TestInstance_Volume(t *testing.T) {
 			instance := prepareInstance(t)
 			volumes, err := instance.GetVolume(context.Background(), &logproto.VolumeRequest{
 				From:        5,
-				Through:     1.1 * 1e3, //milliseconds
+				Through:     1.1 * 1e3, // milliseconds
 				Matchers:    "{}",
 				Limit:       5,
 				AggregateBy: seriesvolume.Series,
@@ -1246,7 +1246,7 @@ func TestInstance_Volume(t *testing.T) {
 				instance := prepareInstance(t)
 				volumes, err := instance.GetVolume(context.Background(), &logproto.VolumeRequest{
 					From:         0,
-					Through:      1.1 * 1e3, //milliseconds
+					Through:      1.1 * 1e3, // milliseconds
 					Matchers:     `{}`,
 					Limit:        5,
 					TargetLabels: []string{"log_stream"},
@@ -1264,7 +1264,7 @@ func TestInstance_Volume(t *testing.T) {
 				instance := prepareInstance(t)
 				volumes, err := instance.GetVolume(context.Background(), &logproto.VolumeRequest{
 					From:         0,
-					Through:      1.1 * 1e3, //milliseconds
+					Through:      1.1 * 1e3, // milliseconds
 					Matchers:     `{log_stream="dispatcher"}`,
 					Limit:        5,
 					TargetLabels: []string{"host"},
@@ -1281,7 +1281,7 @@ func TestInstance_Volume(t *testing.T) {
 				instance := prepareInstance(t)
 				volumes, err := instance.GetVolume(context.Background(), &logproto.VolumeRequest{
 					From:         0,
-					Through:      1.1 * 1e3, //milliseconds
+					Through:      1.1 * 1e3, // milliseconds
 					Matchers:     `{log_stream=~".+"}`,
 					Limit:        5,
 					TargetLabels: []string{"host", "job"},
@@ -1301,7 +1301,7 @@ func TestInstance_Volume(t *testing.T) {
 			instance := prepareInstance(t)
 			volumes, err := instance.GetVolume(context.Background(), &logproto.VolumeRequest{
 				From:        0,
-				Through:     1.1 * 1e3, //milliseconds
+				Through:     1.1 * 1e3, // milliseconds
 				Matchers:    "{}",
 				Limit:       5,
 				AggregateBy: seriesvolume.Labels,
@@ -1321,7 +1321,7 @@ func TestInstance_Volume(t *testing.T) {
 			instance := prepareInstance(t)
 			volumes, err := instance.GetVolume(context.Background(), &logproto.VolumeRequest{
 				From:        0,
-				Through:     1.1 * 1e3, //milliseconds
+				Through:     1.1 * 1e3, // milliseconds
 				Matchers:    `{log_stream="worker"}`,
 				Limit:       5,
 				AggregateBy: seriesvolume.Labels,
@@ -1342,7 +1342,7 @@ func TestInstance_Volume(t *testing.T) {
 			instance := prepareInstance(t)
 			volumes, err := instance.GetVolume(context.Background(), &logproto.VolumeRequest{
 				From:        5,
-				Through:     1.1 * 1e3, //milliseconds
+				Through:     1.1 * 1e3, // milliseconds
 				Matchers:    "{}",
 				Limit:       5,
 				AggregateBy: seriesvolume.Labels,
@@ -1377,7 +1377,7 @@ func TestInstance_Volume(t *testing.T) {
 				instance := prepareInstance(t)
 				volumes, err := instance.GetVolume(context.Background(), &logproto.VolumeRequest{
 					From:         0,
-					Through:      1.1 * 1e3, //milliseconds
+					Through:      1.1 * 1e3, // milliseconds
 					Matchers:     `{}`,
 					Limit:        5,
 					TargetLabels: []string{"host"},
@@ -1394,7 +1394,7 @@ func TestInstance_Volume(t *testing.T) {
 				instance := prepareInstance(t)
 				volumes, err := instance.GetVolume(context.Background(), &logproto.VolumeRequest{
 					From:         0,
-					Through:      1.1 * 1e3, //milliseconds
+					Through:      1.1 * 1e3, // milliseconds
 					Matchers:     `{log_stream="dispatcher"}`,
 					Limit:        5,
 					TargetLabels: []string{"host"},
@@ -1411,7 +1411,7 @@ func TestInstance_Volume(t *testing.T) {
 				instance := prepareInstance(t)
 				volumes, err := instance.GetVolume(context.Background(), &logproto.VolumeRequest{
 					From:         0,
-					Through:      1.1 * 1e3, //milliseconds
+					Through:      1.1 * 1e3, // milliseconds
 					Matchers:     `{log_stream=~".+"}`,
 					Limit:        5,
 					TargetLabels: []string{"host", "job"},

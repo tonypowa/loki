@@ -14,11 +14,11 @@ import (
 	"github.com/prometheus/common/model"
 	"github.com/prometheus/prometheus/model/labels"
 
+	"github.com/grafana/loki/pkg/logql/syntax"
 	"github.com/grafana/loki/v3/pkg/chunkenc"
 	"github.com/grafana/loki/v3/pkg/compression"
 	"github.com/grafana/loki/v3/pkg/ingester/client"
 	"github.com/grafana/loki/v3/pkg/logproto"
-	"github.com/grafana/loki/v3/pkg/logql/syntax"
 	"github.com/grafana/loki/v3/pkg/storage"
 	"github.com/grafana/loki/v3/pkg/storage/chunk"
 	"github.com/grafana/loki/v3/pkg/storage/chunk/client/local"
@@ -61,7 +61,8 @@ func getStore(cm storage.ClientMetrics) (storage.Store, *config.SchemaConfig, er
 					PeriodicTableConfig: config.PeriodicTableConfig{
 						Prefix: "index_",
 						Period: time.Hour * 168,
-					}},
+					},
+				},
 			},
 		},
 	}

@@ -17,13 +17,13 @@ import (
 	"github.com/pkg/errors"
 	"github.com/prometheus/common/model"
 
+	"github.com/grafana/loki/pkg/util/encoding"
 	"github.com/grafana/loki/v3/pkg/compression"
 	v1 "github.com/grafana/loki/v3/pkg/storage/bloom/v1"
 	"github.com/grafana/loki/v3/pkg/storage/chunk/client"
 	"github.com/grafana/loki/v3/pkg/storage/chunk/client/util"
 	"github.com/grafana/loki/v3/pkg/storage/config"
 	"github.com/grafana/loki/v3/pkg/storage/stores/shipper/indexshipper/tsdb"
-	"github.com/grafana/loki/v3/pkg/util/encoding"
 )
 
 const (
@@ -129,7 +129,6 @@ func MetaRefFrom(
 	sources []tsdb.SingleTenantTSDBIdentifier,
 	blocks []BlockRef,
 ) (MetaRef, error) {
-
 	h := v1.Crc32HashPool.Get()
 	defer v1.Crc32HashPool.Put(h)
 
@@ -145,9 +144,7 @@ func MetaRefFrom(
 		}
 	}
 
-	var (
-		start, end model.Time
-	)
+	var start, end model.Time
 
 	for i, block := range blocks {
 		if i == 0 || block.StartTimestamp.Before(start) {
@@ -174,7 +171,6 @@ func MetaRefFrom(
 			Checksum:       h.Sum32(),
 		},
 	}, nil
-
 }
 
 type MetaSearchParams struct {
@@ -382,7 +378,6 @@ func (b *BloomClient) DeleteBlocks(ctx context.Context, references []BlockRef) e
 		ref := references[idx]
 		key := b.Block(ref).Addr()
 		err := b.client.DeleteObject(ctx, key)
-
 		if err != nil {
 			return fmt.Errorf("failed to delete block file %s: %w", key, err)
 		}

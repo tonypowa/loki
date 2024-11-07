@@ -124,13 +124,13 @@ require (
 	github.com/fsnotify/fsnotify v1.8.0
 	github.com/gogo/googleapis v1.4.1
 	github.com/grafana/jsonparser v0.0.0-20241004153430-023329977675
+	github.com/grafana/loki/pkg/logql/log v0.0.0-00010101000000-000000000000
+	github.com/grafana/loki/pkg/logql/log/logfmt v0.0.0
+	github.com/grafana/loki/pkg/logql/log/pattern v0.0.0
+	github.com/grafana/loki/pkg/logql/syntax v0.0.0
 	github.com/grafana/loki/pkg/push v0.0.0-20240924133635-758364c7775f
-	github.com/grafana/loki/v3/pkg/logql/log v0.0.0-00010101000000-000000000000
-	github.com/grafana/loki/v3/pkg/logql/log/logfmt v0.0.0
-	github.com/grafana/loki/v3/pkg/logql/log/pattern v0.0.0
-	github.com/grafana/loki/v3/pkg/logql/syntax v0.0.0
-	github.com/grafana/loki/v3/pkg/util/encoding v0.0.0-00010101000000-000000000000
-	github.com/grafana/loki/v3/pkg/util/regexp v0.0.0
+	github.com/grafana/loki/pkg/util/encoding v0.0.0-00010101000000-000000000000
+	github.com/grafana/loki/pkg/util/regexp v0.0.0
 	github.com/hashicorp/golang-lru/v2 v2.0.7
 	github.com/hashicorp/raft v1.7.1
 	github.com/hashicorp/raft-wal v0.4.1
@@ -182,7 +182,7 @@ require (
 	github.com/go-ole/go-ole v1.2.6 // indirect
 	github.com/goccy/go-json v0.10.3 // indirect
 	github.com/gorilla/handlers v1.5.2 // indirect
-	github.com/grafana/loki/v3/pkg/logql/log/jsonexpr v0.0.0 // indirect
+	github.com/grafana/loki/pkg/logql/log/jsonexpr v0.0.0 // indirect
 	github.com/hashicorp/go-msgpack/v2 v2.1.2 // indirect
 	github.com/lufia/plan9stats v0.0.0-20220913051719-115f729f3c8c // indirect
 	github.com/mdlayher/socket v0.4.1 // indirect
@@ -422,11 +422,11 @@ replace github.com/influxdata/go-syslog/v3 => github.com/leodido/go-syslog/v4 v4
 replace github.com/prometheus/prometheus => github.com/prometheus/prometheus v0.53.2-0.20240726125539-d4f098ae80fb
 
 replace (
-	github.com/grafana/loki/v3/pkg/logql/log => ./pkg/logql/log
-	github.com/grafana/loki/v3/pkg/logql/log/jsonexpr => ./pkg/logql/log/jsonexpr
-	github.com/grafana/loki/v3/pkg/logql/log/logfmt => ./pkg/logql/log/logfmt
-	github.com/grafana/loki/v3/pkg/logql/log/pattern => ./pkg/logql/log/pattern
-	github.com/grafana/loki/v3/pkg/logql/syntax => ./pkg/logql/syntax
-	github.com/grafana/loki/v3/pkg/util/encoding => ./pkg/util/encoding
-	github.com/grafana/loki/v3/pkg/util/regexp => ./pkg/util/regexp
+	github.com/grafana/loki/pkg/logql/log => ./pkg/logql/log
+	github.com/grafana/loki/pkg/logql/log/jsonexpr => ./pkg/logql/log/jsonexpr
+	github.com/grafana/loki/pkg/logql/log/logfmt => ./pkg/logql/log/logfmt
+	github.com/grafana/loki/pkg/logql/log/pattern => ./pkg/logql/log/pattern
+	github.com/grafana/loki/pkg/logql/syntax => ./pkg/logql/syntax
+	github.com/grafana/loki/pkg/util/encoding => ./pkg/util/encoding
+	github.com/grafana/loki/pkg/util/regexp => ./pkg/util/regexp
 )

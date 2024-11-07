@@ -14,8 +14,8 @@ import (
 
 	"github.com/grafana/loki/v3/clients/pkg/promtail/api"
 
+	"github.com/grafana/loki/pkg/logql/log"
 	"github.com/grafana/loki/v3/pkg/logproto"
-	"github.com/grafana/loki/v3/pkg/logql/log"
 	util_log "github.com/grafana/loki/v3/pkg/util/log"
 )
 

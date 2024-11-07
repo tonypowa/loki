@@ -24,7 +24,7 @@ import (
 	"github.com/prometheus/prometheus/rules"
 	"github.com/prometheus/prometheus/template"
 
-	"github.com/grafana/loki/v3/pkg/logql/syntax"
+	"github.com/grafana/loki/pkg/logql/syntax"
 	ruler "github.com/grafana/loki/v3/pkg/ruler/base"
 	"github.com/grafana/loki/v3/pkg/ruler/rulespb"
 	rulerutil "github.com/grafana/loki/v3/pkg/ruler/util"
@@ -73,7 +73,6 @@ func queryFunc(evaluator Evaluator, checker readyChecker, userID string, logger 
 		}
 
 		res, err := evaluator.Eval(ctx, qs, t)
-
 		if err != nil {
 			level.Error(detailLog).Log("msg", "rule evaluation failed", "err", err)
 			return nil, fmt.Errorf("rule evaluation failed: %w", err)
