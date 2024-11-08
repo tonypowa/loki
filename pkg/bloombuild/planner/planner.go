@@ -307,6 +307,10 @@ func (p *Planner) runOne(ctx context.Context) error {
 			var tenantTableEnqueuedTasks int
 			resultsCh := make(chan *protos.TaskResult, len(tasks))
 
+			if openTSDBsInTasks == nil {
+				openTSDBsInTasks = make(strategies.TSDBSet, len(openTSDBs))
+			}
+
 			now := time.Now()
 			for _, task := range tasks {
 				openTSDBsInTasks[task.TSDB] = openTSDBs[task.TSDB]
@@ -341,7 +345,7 @@ func (p *Planner) runOne(ctx context.Context) error {
 		"openTSDBs", len(openTSDBs),
 		"openTSDBsInTasks", len(openTSDBsInTasks),
 	)
-	
+
 	// Create a goroutine to process the results for each table tenant tuple
 	// TODO(salvacorts): This may end up creating too many goroutines.
 	//                   Create a pool of workers to process table-tenant tuples.
