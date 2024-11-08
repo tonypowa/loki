@@ -28,7 +28,7 @@ services:
       - loki
 
   grafana:
-    image: grafana/grafana:9.1.6
+    image: grafana/grafana:latest
     ports:
       - "3000:3000"
     environment:
